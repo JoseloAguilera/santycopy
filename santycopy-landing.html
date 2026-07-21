@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mejorá tus ventas con un niño secuestrado</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --rojo: #D41010;
+      --negro: #222222;
+      --fondo: #222222;
+      --fondo2: #1a1a1a;
+      --fondo3: #333333;
+      --texto: #f5f0eb;
+      --texto2: #cccccc;
+      --texto3: #999999;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--fondo);
+      color: var(--texto);
+      font-family: 'Barlow', sans-serif;
+      font-size: 18px;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 60px 28px 40px;
+      position: relative;
+      background: var(--negro);
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232, 19, 19, 0.13) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-family: 'Barlow', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--rojo);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.2s;
+    }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(58px, 16vw, 110px);
+      line-height: 0.92;
+      color: #f5f0eb;
+      letter-spacing: 1px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.4s;
+    }
+
+    .hero-title span {
+      color: var(--rojo);
+      display: block;
+    }
+
+    .hero-subtitle {
+      margin-top: 28px;
+      font-size: 18px;
+      color: #b8b0a8;
+      max-width: 480px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.6s;
+    }
+
+    .hero-cta {
+      margin-top: 36px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease forwards 0.8s;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--rojo);
+      color: #fff;
+      font-family: 'Barlow', sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      padding: 16px 36px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-primary:hover {
+      background: #c50f0f;
+      transform: translateY(-2px);
+    }
+
+    .scroll-hint {
+      margin-top: 48px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #888;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 1.1s;
+    }
+
+    .scroll-hint::after {
+      content: '';
+      display: block;
+      width: 1px;
+      height: 40px;
+      background: #666;
+      margin: 10px auto 0;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 40px;
+      height: 3px;
+      background: var(--rojo);
+      margin: 0 0 32px;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      padding: 70px 28px;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--rojo);
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(36px, 9vw, 56px);
+      line-height: 1;
+      color: #ffffff;
+      margin-bottom: 28px;
+      letter-spacing: 0.5px;
+    }
+
+    p {
+      margin-bottom: 20px;
+      color: var(--texto2);
+    }
+
+    p strong {
+      color: var(--texto);
+      font-weight: 600;
+    }
+
+    /* ── FOTO ── */
+    .foto-wrap {
+      margin: 40px 0;
+      position: relative;
+    }
+
+    .foto-wrap img {
+      width: 200px;
+      display: block;
+      filter: grayscale(15%) contrast(1.05);
+      border: 3px solid var(--rojo);
+    }
+
+    .foto-caption {
+      font-size: 13px;
+      color: var(--texto3);
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    /* ── SEPARADOR ROJO ── */
+    .red-rule {
+      border: none;
+      border-top: 1px solid rgba(232, 19, 19, 0.25);
+      margin: 0;
+    }
+
+    /* ── PRUEBA SOCIAL ── */
+    .social-label {
+      font-size: 14px;
+      color: var(--texto3);
+      margin-bottom: 20px;
+    }
+
+    .chats {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .chat-bubble {
+      background: var(--fondo2);
+      border-left: 3px solid var(--rojo);
+      padding: 16px 18px;
+      font-size: 15px;
+      color: var(--texto2);
+      line-height: 1.5;
+    }
+
+    .chat-bubble img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 4px;
+    }
+
+
+    .chat-bubble .chat-header {
+      font-size: 11px;
+      color: var(--texto3);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .chat-bubble .msg {
+      color: var(--texto);
+      margin: 4px 0;
+    }
+
+    .chat-bubble .resp {
+      color: var(--texto2);
+    }
+
+    /* ── EBOOK ── */
+    .ebook-box {
+      background: var(--fondo2);
+      border: 1px solid var(--fondo3);
+      padding: 36px 28px;
+      margin: 32px 0;
+      position: relative;
+    }
+
+    .ebook-box::before {
+      content: 'GRATIS';
+      position: absolute;
+      top: -12px;
+      left: 28px;
+      background: var(--rojo);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 4px 10px;
+    }
+
+    .ebook-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      color: #ffffff;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .ebook-items {
+      list-style: none;
+      margin: 16px 0 0;
+    }
+
+    .ebook-items li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--fondo3);
+      color: var(--texto2);
+      font-size: 16px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .ebook-items li::before {
+      content: '◆';
+      color: var(--rojo);
+      font-size: 10px;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    /* ── FORM ── */
+    .form-section {
+      background: var(--fondo2);
+      padding: 48px 28px;
+      border-top: 3px solid var(--rojo);
+    }
+
+    .form-section h2 {
+      font-size: clamp(32px, 8vw, 48px);
+      margin-bottom: 8px;
+      color: #ffffff;
+    }
+
+    .form-desc {
+      color: var(--texto3);
+      font-size: 15px;
+      margin-bottom: 32px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    input[type="email"] {
+      width: 100%;
+      background: #2a2a2a;
+      border: 1px solid var(--fondo3);
+      color: var(--texto);
+      font-family: 'Barlow', sans-serif;
+      font-size: 17px;
+      padding: 16px 18px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="email"]::placeholder {
+      color: #999;
+    }
+
+    input[type="email"]:focus {
+      border-color: var(--rojo);
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--rojo);
+      color: #fff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      letter-spacing: 1px;
+      padding: 18px;
+      border: none;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .submit-btn:hover {
+      background: #c50f0f;
+      transform: translateY(-2px);
+    }
+
+    .form-note {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--texto3);
+      line-height: 1.5;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 32px 28px;
+      font-size: 13px;
+      color: var(--texto3);
+      letter-spacing: 1px;
+      background: var(--fondo);
+    }
+
+    footer span {
+      color: var(--rojo);
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(22px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── MOBILE TWEAKS ── */
+    @media (max-width: 480px) {
+      .hero {
+        padding: 50px 22px 36px;
+      }
+
+      section {
+        padding: 56px 22px;
+      }
+
+      .form-section {
+        padding: 40px 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HERO -->
+  <div class="hero">
+    <p class="hero-eyebrow">Santy Copywriting · Un email diario con estrategias para tu negocio</p>
+    <h1 class="hero-title">
+      Mejorá tus ventas<br>
+      <span>con un niño</span>
+      secuestrado.
+    </h1>
+    <p class="hero-subtitle">La historia de un niño de 8 años, con 8 ladrones armados, y el secreto de ventas más raro
+      que vas a escuchar en tu vida. Aplicalo hoy mismo y empezá a vender más, con cualquier negocio que tengas.</p>
+    <div class="hero-cta">
+      <a href="#registro" class="btn-primary">Quiero el ebook gratis →</a>
+    </div>
+    <p class="scroll-hint">Seguí leyendo</p>
+  </div>
+
+  <hr class="red-rule" />
+
+  <!-- HISTORIA -->
+  <section class="reveal">
+    <p class="label">La historia</p>
+    <div class="divider"></div>
+
+    <div class="foto-wrap">
+      <img src="https://storage.mlcdn.com/account_image/1973466/0cFHFuriOFYARoTx9CYTwLKDQFRO8Rrl3f0X7U3G.jpg"
+        alt="Santy de niño" />
+    </div>
+
+    <p>Sí, es el que está en la foto.</p>
+    <p>Soy yo.</p>
+    <p>Cuando tenía 8 años, <strong>8 hombres armados hasta los dientes entraron a robar mi casa.</strong></p>
+    <p>Solo estábamos mi hermanita de 4 años, mi hermana mayor de 12, y yo.</p>
+    <p>En ese momento de pánico total, mi hermana de 12 hizo algo que jamás olvidé:</p>
+    <p><strong>Negoció nuestras vidas.</strong></p>
+    <p>Sin experiencia. Sin entrenamiento. Solo con palabras.</p>
+    <p>Y funcionó.</p>
+    <p>Ese día aprendí algo que ningún libro de ventas te va a enseñar de manera tan cruda y real:</p>
+    <p><strong>Vender no es convencer. Es entender qué quiere la otra persona y dárselo en el momento exacto.</strong>
+    </p>
+    <p>Y el mayor secreto de persuasión lo aprendí pasándole un martillo a uno de esos ladrones.</p>
+    <p>No lo hubiera aprendido de ninguna otra forma.</p>
+  </section>
+
+  <hr class="red-rule" />
+
+  <!-- QUIÉN SOY -->
+  <section class="reveal">
+    <p class="label">Quién soy</p>
+    <div class="divider"></div>
+    <h2>No te voy a pedir que me creas.</h2>
+    <p>Lo único que te pido es que lo veas por vos mismo.</p>
+    <p>Soy vendedor. Todos los días salgo a vender. Desde hace 5 años fundé dos negocios — <strong>un complejo de pádel
+        y un lavadero de autos</strong> — y no tengo un solo turno libre.</p>
+    <p class="social-label">Esto es lo que veo en mi teléfono todos los días:</p>
+
+    <div class="chats">
+      <div class="chat-bubble">
+        <img src="https://storage.mlcdn.com/account_image/1973466/q8BE94QGiDILxJxOoLkCNRQSuHbAg42ALjwOy0ek.jpg"
+          alt="Screenshot 1">
+      </div>
+      <div class="chat-bubble">
+        <img src="https://storage.mlcdn.com/account_image/1973466/f2lkyqXJkCnyrlCxJxGgztPMNnwkV0WOCqcxR2df.jpg"
+          alt="Screenshot 2">
+      </div>
+      <div class="chat-bubble">
+        <img src="https://storage.mlcdn.com/account_image/1973466/aFFhc7B1OfktDogE5oN0wtreV3ulz5iXGgut12z2.jpg"
+          alt="Screenshot 3">
+      </div>
+    </div>
+
+    <p>Así que cuando te digo que sé de lo que te hablo, es porque ya pasé por mucho.</p>
+    <p>Quizá no por demasiado. Pero suficiente para saber qué funciona en un negocio y qué no.</p>
+    <p><strong>Y puedo ahorrarte el proceso tedioso y doloroso de comprobarlo por vos mismo.</strong></p>
+  </section>
+
+  <hr class="red-rule" />
+
+  <!-- EBOOK -->
+  <section class="reveal">
+    <p class="label">Lo que te llevás</p>
+    <div class="divider"></div>
+    <h2>Todo eso ahora es tuyo. Gratis.</h2>
+    <p>Lo junté en un ebook donde vas a ver exactamente qué aprendí en esa situación de vida o muerte, y cómo lo usás
+      para vender más en cualquier negocio que tengas.</p>
+
+    <div class="ebook-box">
+      <div class="ebook-title">Ventas de vida o muerte</div>
+      <p style="font-size:14px; color:#888; margin-bottom:4px;">Lo que aprendí a los 8 años. Lo que aplicás hoy.</p>
+      <ul class="ebook-items">
+        <li>El principio de negociación que usó mi hermana de 12 años con 8 delincuentes armados</li>
+        <li>Cómo aplicarlo para cerrar clientes en cualquier negocio (vendas lo que vendas)</li>
+        <li>La técnica de persuasión que aprendí pasándole un martillo a un ladrón</li>
+        <li>Por qué el miedo extremo enseña más que cualquier curso de ventas</li>
+      </ul>
+    </div>
+
+    <p>Además, cada día te mando un email gratis con técnicas y estrategias que podés usar ese mismo día en tu negocio.
+    </p>
+    <p style="color:var(--texto3); font-size:15px;">Vendas lo que vendas.</p>
+  </section>
+
+  <!-- FORMULARIO -->
+  <div class="form-section reveal" id="registro">
+    <p class="label">solo un paso más</p>
+    <h2>Quiero el ebook</h2>
+    <p class="form-desc">Dejá tu email y te lo mando ahora mismo. Sin vueltas.</p>
+
+    <form onsubmit="handleSubmit(event)">
+      <div class="form-group">
+        <input type="email" placeholder="Tu email" required id="emailInput" />
+      </div>
+      <button type="submit" class="submit-btn">Mandármelo gratis →</button>
+    </form>
+
+    <p class="form-note">
+      Sin spam. Un email diario gratis con ideas concretas para tu negocio.<br>
+      Te das de baja cuando quieras con un click.
+    </p>
+  </div>
+
+  <footer>
+    <p><span>Santy Copywriting</span> · santycopy.com</p>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+
+    // Form submit
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('emailInput').value;
+      const btn = e.target.querySelector('.submit-btn');
+      const originalText = btn.textContent;
+
+      btn.textContent = 'Enviando...';
+      btn.disabled = true;
+
+      try {
+        // Enviar la información de forma segura a tu propio archivo PHP
+        const response = await fetch('subscribe.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email: email })
+        });
+
+        if (response.ok) {
+          btn.textContent = '✓ ¡Listo! Revisá tu email.';
+          btn.style.background = '#1a6b1a';
+        } else {
+          const errorData = await response.json();
+          console.error('Error del servidor:', errorData);
+          btn.textContent = 'Error. Intenta de nuevo.';
+          btn.disabled = false;
+          btn.style.background = 'var(--rojo)';
+        }
+      } catch (error) {
+        console.error('Error en la petición:', error);
+        btn.textContent = 'Error de conexión.';
+        btn.disabled = false;
+        btn.style.background = 'var(--rojo)';
+      }
+    }
+  </script>
+</body>
+
+</html>

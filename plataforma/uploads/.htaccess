@@ -1,0 +1,13 @@
+# Denegar el acceso directo a cualquier archivo PHP en esta carpeta de recursos subidos
+<Files *.php>
+    Order Deny,Allow
+    Deny from all
+</Files>
+
+# Desactivar ejecución de scripts adicionales si el servidor lo soporta
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
