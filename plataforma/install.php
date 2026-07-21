@@ -2,11 +2,28 @@
 // install.php - Inicializador de base de datos para Santy Copy LMS
 
 define('ACCESS_ALLOWED', true);
+// Cargar variables de entorno desde .env si existe
+$env_path = dirname(__DIR__) . '/.env';
+if (file_exists($env_path)) {
+    $lines = file($env_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) {
+            continue;
+        }
+        $parts = explode('=', $line, 2);
+        if (count($parts) === 2) {
+            $key = trim($parts[0]);
+            $value = trim($parts[1]);
+            $value = trim($value, '"\'');
+            $_ENV[$key] = $value;
+        }
+    }
+}
 
-$host = '127.0.0.1';
-$username = 'root';
-$password = '';
-$dbname = 'santycopy_cursos';
+$host = $_ENV['DB_HOST'] ?? '127.0.0.1';
+$username = $_ENV['DB_USER'] ?? 'root';
+$password = $_ENV['DB_PASS'] ?? '';
+$dbname = $_ENV['DB_NAME'] ?? 'santycopy_cursos';
 
 $success = false;
 $message = '';
