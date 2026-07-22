@@ -110,7 +110,7 @@ if (isset($_GET['run']) && $_GET['run'] == 1) {
         ];
         
         // Simular llamada de red al callback del propio servidor local
-        $callback_url = "http://" . $_SERVER['HTTP_HOST'] . "/santycopy/plataforma/pagopar_callback.php";
+        $callback_url = "http://" . $_SERVER['HTTP_HOST'] . get_base_path() . "/pagopar_callback.php";
         
         $ch = curl_init($callback_url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

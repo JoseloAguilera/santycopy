@@ -33,10 +33,20 @@ function get_logged_user() {
     ];
 }
 
+// Obtener dinámicamente el path base de la plataforma (ej: /santycopy/plataforma o /plataforma)
+function get_base_path() {
+    $script = $_SERVER['SCRIPT_NAME'] ?? '';
+    $pos = strpos($script, '/plataforma');
+    if ($pos !== false) {
+        return substr($script, 0, $pos) . '/plataforma';
+    }
+    return '/plataforma';
+}
+
 // Forzar inicio de sesión
 function require_login() {
     if (!is_logged_in()) {
-        header('Location: /santycopy/plataforma/login.php');
+        header('Location: ' . get_base_path() . '/login.php');
         exit;
     }
 }
@@ -45,7 +55,7 @@ function require_login() {
 function require_admin() {
     require_login();
     if ($_SESSION['user_role'] !== 'admin') {
-        header('Location: /santycopy/plataforma/student/index.php');
+        header('Location: ' . get_base_path() . '/student/index.php');
         exit;
     }
 }
@@ -54,7 +64,7 @@ function require_admin() {
 function require_student() {
     require_login();
     if ($_SESSION['user_role'] !== 'student' && $_SESSION['user_role'] !== 'admin') {
-        header('Location: /santycopy/plataforma/login.php');
+        header('Location: ' . get_base_path() . '/login.php');
         exit;
     }
 }

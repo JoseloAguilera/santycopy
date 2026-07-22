@@ -15,5 +15,5 @@ if (ini_get("session.use_cookies")) {
 
 session_destroy();
 
-header('Location: /santycopy/plataforma/login.php');
+header('Location: ' . get_base_path() . '/login.php');
 exit;

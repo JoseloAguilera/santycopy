@@ -39,6 +39,9 @@ try {
 } catch (PDOException $e) {
     // Si la base de datos no existe todavía, permitimos que continúe si estamos en install.php
     if (basename($_SERVER['PHP_SELF']) !== 'install.php') {
-        die("Error de conexión a la base de datos: " . $e->getMessage() . "<br><br>¿Ya configuraste el archivo .env o ejecutaste <a href='/santycopy/plataforma/install.php'>install.php</a>?");
+        $script = $_SERVER['SCRIPT_NAME'] ?? '';
+        $pos = strpos($script, '/plataforma');
+        $base_path = ($pos !== false) ? (substr($script, 0, $pos) . '/plataforma') : '/plataforma';
+        die("Error de conexión a la base de datos: " . $e->getMessage() . "<br><br>¿Ya configuraste el archivo .env o ejecutaste <a href='" . $base_path . "/install.php'>install.php</a>?");
     }
 }

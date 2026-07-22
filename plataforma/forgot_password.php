@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$email, $token, $expires_at]);
                 
                 // Enlace de restablecimiento
-                $reset_link = "http://" . $_SERVER['HTTP_HOST'] . "/santycopy/plataforma/reset_password.php?token=" . $token;
+                $reset_link = "http://" . $_SERVER['HTTP_HOST'] . get_base_path() . "/reset_password.php?token=" . $token;
                 
                 // Enviar "email" simulado guardándolo en un archivo log local
                 $log_content = "[" . date('Y-m-d H:i:s') . "] Enlace de recuperación para " . $email . " (" . $user['name'] . "): \n" . $reset_link . "\n----------------------------------------\n";
