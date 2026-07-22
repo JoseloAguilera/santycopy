@@ -109,6 +109,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="auth-footer">
                 ¿No tienes cuenta? <a href="register.php">Regístrate gratis</a>
             </div>
+
+            <!-- Caja de Credenciales de Prueba -->
+            <div style="margin-top: 25px; padding: 15px; background: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border-color); border-radius: 8px; text-align: left; font-size: 13px;">
+                <strong style="color: var(--heading-color); display: block; margin-bottom: 8px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">🔑 Credenciales de Prueba:</strong>
+                <div style="margin-bottom: 6px; display: flex; justify-content: space-between;">
+                    <span><span style="color: #a78bfa; font-weight: 600;">Admin:</span> <code>admin@santycopy.com</code></span>
+                    <span><code>admin123</code></span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span><span style="color: var(--primary-color); font-weight: 600;">Alumno:</span> <code>alumno@santycopy.com</code></span>
+                    <span><code>alumno123</code></span>
+                </div>
+            </div>
         </div>
     </div>
 </body>
