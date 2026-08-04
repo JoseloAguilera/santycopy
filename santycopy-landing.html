@@ -596,8 +596,11 @@
         });
 
         if (response.ok) {
-          btn.textContent = '✓ ¡Listo! Revisá tu email.';
+          btn.textContent = '✓ ¡Listo! Redirigiendo...';
           btn.style.background = '#1a6b1a';
+          setTimeout(() => {
+            window.location.href = 'gracias.html';
+          }, 1200);
         } else {
           const errorData = await response.json();
           console.error('Error del servidor:', errorData);

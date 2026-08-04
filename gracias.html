@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>¡Gracias por tu interés! | Santy Copywriting</title>
+  <meta name="description" content="Pronto recibirás información acerca de nuestros cursos. Quedate atento a las novedades de Santy Copywriting." />
+  
+  <!-- Favicon -->
+  <link rel="shortcut icon" type="image/png" href="https://storage.mlcdn.com/account_image/1973466/checkozxGGY.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --rojo: #E50914;
+      --rojo-glow: rgba(229, 9, 20, 0.35);
+      --rojo-hover: #ff1f2a;
+      --negro-bg: #0a0a0c;
+      --card-bg: rgba(22, 22, 26, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-glow: rgba(229, 9, 20, 0.3);
+      --texto-main: #f5f5f7;
+      --texto-secundario: #a1a1aa;
+      --texto-muted: #71717a;
+      --verde-exito: #10b981;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--negro-bg);
+      color: var(--texto-main);
+      font-family: 'Plus Jakarta Sans', 'Barlow', sans-serif;
+      font-size: 17px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Ambient Background Effects */
+    .bg-glow-1 {
+      position: fixed;
+      top: -10vw;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70vw;
+      height: 50vh;
+      background: radial-gradient(ellipse at center, var(--rojo-glow) 0%, rgba(229, 9, 20, 0) 70%);
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.8;
+      animation: pulseGlow 8s ease-in-out infinite alternate;
+    }
+
+    .bg-glow-2 {
+      position: fixed;
+      bottom: -15vw;
+      right: -10vw;
+      width: 50vw;
+      height: 50vh;
+      background: radial-gradient(circle, rgba(229, 9, 20, 0.15) 0%, transparent 60%);
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Pattern overlay */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* Header Nav */
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .brand-badge-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--rojo), #990000);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      color: #fff;
+      box-shadow: 0 0 15px var(--rojo-glow);
+    }
+
+    .brand-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+
+    .brand-name span {
+      color: var(--rojo);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--texto-secundario);
+      backdrop-filter: blur(10px);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--verde-exito);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--verde-exito);
+      animation: blinkDot 2s infinite;
+    }
+
+    /* Main Container */
+    main {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      max-width: 860px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* Hero Thanks Card */
+    .hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 56px 40px;
+      text-align: center;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 48px;
+      animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--rojo), transparent);
+    }
+
+    /* Animated Success Icon */
+    .success-icon-wrap {
+      width: 88px;
+      height: 88px;
+      margin: 0 auto 28px;
+      background: rgba(229, 9, 20, 0.1);
+      border: 2px solid var(--rojo);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 30px var(--rojo-glow);
+      animation: pulseIcon 3s infinite ease-in-out;
+    }
+
+    .success-icon-wrap svg {
+      width: 44px;
+      height: 44px;
+      stroke: var(--rojo);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      animation: checkAnimation 0.6s ease-in-out forwards 0.3s;
+    }
+
+    /* Hero Text */
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(42px, 8vw, 72px);
+      line-height: 0.95;
+      letter-spacing: 1px;
+      color: #ffffff;
+      margin-bottom: 20px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .hero-subtitle {
+      font-size: clamp(18px, 3.5vw, 22px);
+      font-weight: 500;
+      color: #e4e4e7;
+      max-width: 620px;
+      margin: 0 auto 28px;
+      line-height: 1.5;
+    }
+
+    .hero-subtitle .highlight {
+      color: var(--rojo);
+      font-weight: 700;
+    }
+
+    .info-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(229, 9, 20, 0.12);
+      border: 1px solid rgba(229, 9, 20, 0.3);
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffa3a8;
+      margin-bottom: 36px;
+    }
+
+    .info-pill svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    /* CTA Buttons */
+    .cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--rojo) 0%, #b30009 100%);
+      color: #ffffff;
+      box-shadow: 0 8px 24px rgba(229, 9, 20, 0.4);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--rojo-hover) 0%, var(--rojo) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(229, 9, 20, 0.6);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--texto-main);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(8px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Progress & Expectation Bar */
+    .progress-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 48px;
+      backdrop-filter: blur(12px);
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .progress-title {
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--rojo);
+    }
+
+    .progress-percent {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--texto-secundario);
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .progress-bar-fill {
+      width: 66%;
+      height: 100%;
+      background: linear-gradient(90deg, #b30009, var(--rojo), #ff4d56);
+      border-radius: 10px;
+      box-shadow: 0 0 12px var(--rojo);
+      animation: growProgress 1.5s ease-out forwards;
+    }
+
+    .progress-note {
+      font-size: 14px;
+      color: var(--texto-secundario);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Course Preview Grid */
+    .section-label {
+      text-align: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 38px;
+      letter-spacing: 1px;
+      color: var(--texto-main);
+      margin-bottom: 8px;
+    }
+
+    .section-sublabel {
+      text-align: center;
+      color: var(--texto-secundario);
+      font-size: 15px;
+      margin-bottom: 32px;
+    }
+
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+
+    .course-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .course-card:hover {
+      border-color: var(--card-border-glow);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(229, 9, 20, 0.15);
+    }
+
+    .course-tag {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--rojo);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .course-card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .course-card-desc {
+      font-size: 14px;
+      color: var(--texto-secundario);
+      line-height: 1.5;
+    }
+
+    /* FAQ Section */
+    .faq-container {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 36px;
+      margin-bottom: 48px;
+      backdrop-filter: blur(12px);
+    }
+
+    .faq-item {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 18px 0;
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .faq-question {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .faq-icon {
+      font-size: 20px;
+      color: var(--rojo);
+      transition: transform 0.3s ease;
+    }
+
+    .faq-answer {
+      font-size: 15px;
+      color: var(--texto-secundario);
+      margin-top: 10px;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .faq-item.active .faq-answer {
+      display: block;
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(45deg);
+    }
+
+    /* Social Community Banner */
+    .community-card {
+      background: linear-gradient(135deg, rgba(229, 9, 20, 0.15) 0%, rgba(20, 20, 25, 0.8) 100%);
+      border: 1px solid var(--card-border-glow);
+      border-radius: 20px;
+      padding: 36px;
+      text-align: center;
+      position: relative;
+    }
+
+    .community-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .community-desc {
+      font-size: 15px;
+      color: var(--texto-secundario);
+      max-width: 500px;
+      margin: 0 auto 24px;
+    }
+
+    /* Footer */
+    footer {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 13px;
+      color: var(--texto-muted);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: auto;
+    }
+
+    footer a {
+      color: var(--texto-secundario);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer a:hover {
+      color: var(--rojo);
+    }
+
+    /* Animations */
+    @keyframes pulseGlow {
+      0% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+      100% { opacity: 0.9; transform: translateX(-50%) scale(1.1); }
+    }
+
+    @keyframes blinkDot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulseIcon {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 25px var(--rojo-glow); }
+      50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(229, 9, 20, 0.6); }
+    }
+
+    @keyframes growProgress {
+      from { width: 0%; }
+      to { width: 66%; }
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      header {
+        padding: 16px 20px;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .hero-card {
+        padding: 36px 20px;
+      }
+      .cta-group {
+        flex-direction: column;
+        width: 100%;
+      }
+      .btn {
+        width: 100%;
+      }
+      .progress-section, .faq-container, .community-card {
+        padding: 24px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Dynamic Glowing Background -->
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+  <div class="bg-grid"></div>
+
+  <!-- Header -->
+  <header>
+    <a href="#" class="brand-logo">
+      <div class="brand-badge-icon">S</div>
+      <div class="brand-name">Santy <span>Copywriting</span></div>
+    </a>
+    <div class="status-badge">
+      <span class="status-dot"></span>
+      Lista de Espera Activa
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Main Hero Thanks Card -->
+    <div class="hero-card">
+      <div class="success-icon-wrap">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 6L9 17l-5-5"></path>
+        </svg>
+      </div>
+
+      <h1 class="hero-title">¡Gracias por tu interés!</h1>
+      <p class="hero-subtitle">
+        Pronto recibirás información acerca de nuestros cursos, <span class="highlight">quédate atento</span>.
+      </p>
+
+      <div class="info-pill">
+        <svg viewBox="0 0 24 24">
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        Te enviaremos las novedades directo a tu casilla de correo
+      </div>
+
+      <div class="cta-group">
+        <a href="https://wa.me/595983593348" class="btn btn-primary" target="_blank" rel="noopener">
+          💬 Consulta vía WhatsApp
+        </a>
+      </div>
+    </div>
+
+    <!-- Status & Progress Bar -->
+    <div class="progress-section">
+      <div class="progress-header">
+        <span class="progress-title">⚡ Estado de Apertura de Cursos</span>
+        <span class="progress-percent">66% Listo</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill"></div>
+      </div>
+      <p class="progress-note">
+        🎯 Estamos ultimando detalles de la plataforma y materiales prácticos. Los cupos serán limitados por edición.
+      </p>
+    </div>
+
+    <!-- FAQ Accordion -->
+    <div class="faq-container">
+      <h2 class="section-label" style="text-align: left; margin-bottom: 24px;">Preguntas Frecuentes</h2>
+
+      <div class="faq-item active">
+        <div class="faq-question">
+          <span>¿Cuándo se abrirán las inscripciones?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">
+          Las fechas oficiales se enviarán primero a quienes integran nuestra lista prioritaria. Recibirás un correo con la fecha exacta y un enlace de acceso anticipado.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>¿Necesito experiencia previa en copywriting?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">
+          No. El programa está diseñado desde cero con ejemplos de casos reales, plantillas y guías paso a paso aplicables a cualquier negocio o profesión.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">
+          <span>¿Habrá cupos limitados?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-answer">
+          Sí. Para garantizar la máxima calidad y feedback personalizado en los ejercicios, cada cohorte cuenta con un cupo máximo de alumnos.
+        </div>
+      </div>
+    </div>
+
+    <!-- Community Callout -->
+    <div class="community-card">
+      <h3 class="community-title">¿Tenés alguna consulta rápida?</h3>
+      <p class="community-desc">
+        Podés responder al primer correo que te enviamos o escribirnos directamente. Estamos para ayudarte.
+      </p>
+      <a href="santycopy-landing.html" class="btn btn-secondary">
+        ← Volver a la página principal
+      </a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2026 Santy Copywriting. Todos los derechos reservados. | <a href="santycopy-landing.html">Inicio</a></p>
+  </footer>
+
+  <!-- Accordion Script -->
+  <script>
+    document.querySelectorAll('.faq-question').forEach(item => {
+      item.addEventListener('click', () => {
+        const parent = item.parentElement;
+        const isActive = parent.classList.contains('active');
+        
+        document.querySelectorAll('.faq-item').forEach(child => {
+          child.classList.remove('active');
+        });
+
+        if (!isActive) {
+          parent.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
