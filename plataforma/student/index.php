@@ -31,22 +31,22 @@ try {
     
     // Calcular progreso para cada curso
     foreach ($enrolled_courses as $c) {
-        // Cantidad de clases del curso
-        $stmt_total = $pdo->prepare("SELECT COUNT(*) FROM lessons WHERE course_id = ?");
+        // Cantidad de clases regulares del curso (los bonus no forman parte del porcentaje)
+        $stmt_total = $pdo->prepare("SELECT COUNT(*) FROM lessons WHERE course_id = ? AND is_bonus = 0");
         $stmt_total->execute([$c['id']]);
         $total_lessons = intval($stmt_total->fetchColumn());
         
-        // Clases marcadas como completadas
+        // Clases regulares marcadas como completadas
         $stmt_completed = $pdo->prepare("
             SELECT COUNT(*) 
             FROM progress p
             JOIN lessons l ON p.lesson_id = l.id
-            WHERE l.course_id = ? AND p.user_id = ? AND p.completed = 1
+            WHERE l.course_id = ? AND l.is_bonus = 0 AND p.user_id = ? AND p.completed = 1
         ");
         $stmt_completed->execute([$c['id'], $user['id']]);
         $completed_lessons = intval($stmt_completed->fetchColumn());
         
-        // Calcular porcentaje
+        // Calcular porcentaje basado únicamente en las clases principales
         $pct = ($total_lessons > 0) ? round(($completed_lessons / $total_lessons) * 100) : 0;
         
         $my_courses[] = [

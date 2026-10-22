@@ -38,9 +38,14 @@ try {
         exit;
     }
     
-    // 3. Crear una orden de pago en estado 'pendiente'
+    // 2.5. Obtener precio efectivo considerando la oferta de 15 minutos (si aplica)
+    require_once 'includes/promo_helper.php';
+    $promo_status = get_course_promo_status($pdo, $course_id);
+    $effective_price = $promo_status['effective_price'];
+    
+    // 3. Crear una orden de pago en estado 'pendiente' con el precio formateado según la oferta
     $stmt = $pdo->prepare("INSERT INTO orders (user_id, course_id, amount, status) VALUES (?, ?, ?, 'pending')");
-    $stmt->execute([$user['id'], $course_id, $course['price']]);
+    $stmt->execute([$user['id'], $course_id, $effective_price]);
     $order_id = $pdo->lastInsertId();
     
     // 4. Direccionamiento según el Entorno
@@ -51,9 +56,9 @@ try {
     } else {
         // --- MODO PRODUCCIÓN: CONEXIÓN CON PAGOPAR REAL ---
         
-        // Generar firma SHA1
+        // Generar firma SHA1 con el precio en oferta o regular
         // Fórmula: sha1(comercio_token_privado + idPedido + monto)
-        $monto_total = floatval($course['price']);
+        $monto_total = floatval($effective_price);
         $token = sha1(PAGOPAR_PRIVATE_KEY . $order_id . strval($monto_total));
         
         // Preparar payload JSON

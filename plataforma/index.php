@@ -29,6 +29,10 @@ try {
 require_once 'includes/header.php';
 ?>
 
+<?php
+require_once 'includes/promo_helper.php';
+?>
+
 <div style="text-align: center; margin-bottom: 40px;">
     <h1 style="font-size: 32px; margin-bottom: 10px;">Aprende Copywriting y Persuasión</h1>
     <p style="color: var(--text-color); max-width: 600px; margin: 0 auto; font-size: 16px;">
@@ -43,8 +47,10 @@ require_once 'includes/header.php';
         <?php foreach ($courses as $course): ?>
             <?php 
             $is_enrolled = in_array($course['id'], $my_enrollments);
-            $formatted_price = number_format($course['price'], 0, ',', '.') . ' ₲';
             $is_subscription = ($course['payment_type'] === 'subscription');
+            $promo = get_course_promo_status($pdo, $course['id']);
+            $formatted_regular = format_price_usd_pyg($promo['regular_price']);
+            $formatted_effective = format_price_usd_pyg($promo['effective_price']);
             ?>
             <div class="card course-card">
                 <div class="course-thumb">
@@ -55,9 +61,15 @@ require_once 'includes/header.php';
                         <div class="placeholder-icon">✍️</div>
                     <?php endif; ?>
                     
-                    <span class="course-price-badge">
-                        <?php echo $is_subscription ? 'Suscripción' : 'Compra Única'; ?>
-                    </span>
+                    <?php if ($promo['is_active']): ?>
+                        <span class="course-price-badge" style="background: #ef4444; color: white;">
+                            🔥 Oferta 15 Min ($-<?php echo $promo['discount_pct']; ?>%)
+                        </span>
+                    <?php else: ?>
+                        <span class="course-price-badge">
+                            <?php echo $is_subscription ? 'Suscripción' : 'Compra Única'; ?>
+                        </span>
+                    <?php endif; ?>
                 </div>
                 
                 <h3 class="course-title"><?php echo h($course['title']); ?></h3>
@@ -66,8 +78,13 @@ require_once 'includes/header.php';
                 <div class="course-footer">
                     <div>
                         <div style="font-size: 11px; color: var(--text-muted);">Precio:</div>
-                        <div class="course-price">
-                            <?php echo $formatted_price; ?>
+                        <div class="course-price" style="font-size: 14px;">
+                            <?php if ($promo['is_active']): ?>
+                                <span style="font-size: 12px; text-decoration: line-through; color: var(--text-muted); margin-right: 4px; font-weight: normal;"><?php echo $formatted_regular; ?></span>
+                                <br><span style="color: #10b981; font-weight: 700;"><?php echo $formatted_effective; ?></span>
+                            <?php else: ?>
+                                <span><?php echo $formatted_regular; ?></span>
+                            <?php endif; ?>
                             <?php if ($is_subscription): ?>
                                 <span style="font-size: 12px; font-weight: normal; color: var(--text-muted);">/ mes</span>
                             <?php endif; ?>
@@ -80,8 +97,8 @@ require_once 'includes/header.php';
                                 🚀 Estudiar
                             </a>
                         <?php else: ?>
-                            <a href="checkout.php?course_id=<?php echo $course['id']; ?>" class="btn btn-primary btn-sm">
-                                <?php echo $is_subscription ? 'Suscribirse' : 'Comprar'; ?>
+                            <a href="oferta.php?id=<?php echo $course['id']; ?>" class="btn btn-primary btn-sm">
+                                <?php echo $promo['is_active'] ? 'Ver Oferta ⚡' : ($is_subscription ? 'Suscribirse' : 'Comprar'); ?>
                             </a>
                         <?php endif; ?>
                     </div>

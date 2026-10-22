@@ -66,17 +66,17 @@ try {
     
     // 4. Calcular el nuevo porcentaje de progreso del curso completo
     
-    // Total de clases en el curso
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM lessons WHERE course_id = ?");
+    // Total de clases regulares en el curso (los bonus no forman parte del porcentaje)
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM lessons WHERE course_id = ? AND is_bonus = 0");
     $stmt->execute([$course_id]);
     $total_lessons = intval($stmt->fetchColumn());
     
-    // Clases completadas por el usuario en este curso
+    // Clases regulares completadas por el usuario en este curso
     $stmt = $pdo->prepare("
         SELECT COUNT(*) 
         FROM progress p
         JOIN lessons l ON p.lesson_id = l.id
-        WHERE l.course_id = ? AND p.user_id = ? AND p.completed = 1
+        WHERE l.course_id = ? AND l.is_bonus = 0 AND p.user_id = ? AND p.completed = 1
     ");
     $stmt->execute([$course_id, $user['id']]);
     $completed_lessons = intval($stmt->fetchColumn());

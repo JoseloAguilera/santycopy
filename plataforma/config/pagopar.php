@@ -5,14 +5,18 @@ if (!defined('ACCESS_ALLOWED')) {
     define('ACCESS_ALLOWED', true);
 }
 
-// Entornos disponibles: 'development' o 'production'
-// En 'development', la plataforma usará un simulador local sin conectar a la API real.
-define('PAGOPAR_ENV', 'development');
+// Cargar credenciales desde variables de entorno (.env) con fallbacks
+$pagopar_env = $_ENV['PAGOPAR_ENV'] ?? getenv('PAGOPAR_ENV') ?: 'development';
+$pagopar_public = $_ENV['PAGOPAR_PUBLIC_KEY'] ?? getenv('PAGOPAR_PUBLIC_KEY') ?: '';
+$pagopar_private = $_ENV['PAGOPAR_PRIVATE_KEY'] ?? getenv('PAGOPAR_PRIVATE_KEY') ?: '';
 
-// Credenciales de Pagopar (Se rellenan para producción)
-define('PAGOPAR_PUBLIC_KEY', '');
-define('PAGOPAR_PRIVATE_KEY', '');
+// Entornos disponibles: 'development' (simulador local) o 'production' (API real Pagopar)
+define('PAGOPAR_ENV', $pagopar_env);
 
-// URLs base de Pagopar
+// Credenciales del comercio
+define('PAGOPAR_PUBLIC_KEY', $pagopar_public);
+define('PAGOPAR_PRIVATE_KEY', $pagopar_private);
+
+// URLs base de la API Pagopar v2.0
 define('PAGOPAR_API_URL', 'https://api.pagopar.com/api/comercios/2.0/iniciar-transaccion');
 define('PAGOPAR_CHECKOUT_URL', 'https://checkout.pagopar.com/pagos/');
