@@ -117,11 +117,16 @@ try {
         }
     }
     
-    // Pagopar requiere estrictamente imprimir JSON de confirmación:
-    echo json_encode([
-        'respuesta' => true,
-        'resultado' => 'OK'
-    ]);
+    // Pagopar en el validador del panel (Paso 2) y en su protocolo de notificación
+    // requiere devolver como respuesta la lista de resultados procesados:
+    if (!empty($data['resultado'])) {
+        echo json_encode($data['resultado'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    } else {
+        echo json_encode([
+            'respuesta' => true,
+            'resultado' => 'OK'
+        ]);
+    }
     exit;
     
 } catch (Exception $e) {

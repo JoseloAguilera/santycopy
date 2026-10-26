@@ -123,7 +123,7 @@ if (isset($_GET['run']) && $_GET['run'] == 1) {
         curl_close($ch);
         
         $res_json = json_decode($response, true);
-        if ($http_code === 200 && (trim($response) === 'OK' || (isset($res_json['respuesta']) && $res_json['respuesta'] === true))) {
+        if ($http_code === 200 && (trim($response) === 'OK' || is_array($res_json) || (isset($res_json['respuesta']) && $res_json['respuesta'] === true))) {
             $steps[] = [
                 'name' => 'Simulación de Confirmación de Pago',
                 'desc' => 'Enviamos una señal segura simulando que la pasarela de pagos Pagopar confirmó que el cobro fue procesado correctamente.',

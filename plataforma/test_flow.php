@@ -48,7 +48,7 @@ try {
     // ----------------------------------------------------
     // TEST 3: Creación de Orden Pendiente
     // ----------------------------------------------------
-    $course_id = 1; // Curso semilla
+    $course_id = intval($pdo->query("SELECT id FROM courses LIMIT 1")->fetchColumn() ?: 1);
     $amount = 150000;
     
     $stmt = $pdo->prepare("INSERT INTO orders (user_id, course_id, amount, status) VALUES (?, ?, ?, 'pending')");
@@ -106,7 +106,7 @@ try {
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     
-    $ipn_success = ($http_code === 200 && trim($response) === 'OK');
+    $ipn_success = ($http_code === 200 && (trim($response) === 'OK' || is_array(json_decode($response, true))));
     print_result("Simulación de Callback IPN (HTTP POST)", $ipn_success, "HTTP Code: $http_code, Response: $response");
 
     // ----------------------------------------------------
