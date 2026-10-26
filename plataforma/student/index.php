@@ -15,6 +15,78 @@ $success_msg = '';
 
 if (isset($_GET['payment']) && $_GET['payment'] === 'success') {
     $success_msg = '🎉 ¡Pago confirmado! Tu curso ha sido activado correctamente.';
+    
+    // Verificación y activación inmediata en caso de que el webhook de Pagopar aún no haya impactado
+    $return_hash = trim($_GET['hash'] ?? '');
+    if (!empty($return_hash) && $return_hash !== '($hash)') {
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM orders WHERE payment_hash = ? AND user_id = ?");
+            $stmt->execute([$return_hash, $user['id']]);
+            $pending_order = $stmt->fetch();
+            
+            if ($pending_order && $pending_order['status'] === 'pending') {
+                require_once '../config/pagopar.php';
+                $key_to_use = (PAGOPAR_ENV === 'development') ? 'DEVELOPMENT' : PAGOPAR_PRIVATE_KEY;
+                $token_consulta = sha1($key_to_use . 'CONSULTA');
+                
+                $ch = curl_init('https://api.pagopar.com/api/pedidos/1.1/traer');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                    'hash_pedido' => $return_hash,
+                    'token' => $token_consulta,
+                    'token_publico' => PAGOPAR_PUBLIC_KEY
+                ]));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                $resp = curl_exec($ch);
+                curl_close($ch);
+                
+                $pagopar_data = json_decode($resp, true);
+                $is_really_paid = false;
+                if ($pagopar_data && !empty($pagopar_data['resultado'])) {
+                    foreach ($pagopar_data['resultado'] as $p_item) {
+                        if (!empty($p_item['pagado']) && $p_item['pagado'] == true) {
+                            $is_really_paid = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if ($is_really_paid) {
+                    $pdo->beginTransaction();
+                    $stmt = $pdo->prepare("UPDATE orders SET status = 'paid' WHERE id = ?");
+                    $stmt->execute([$pending_order['id']]);
+                    
+                    $stmt = $pdo->prepare("SELECT id, title, payment_type, subscription_period FROM courses WHERE id = ?");
+                    $stmt->execute([$pending_order['course_id']]);
+                    $course = $stmt->fetch();
+                    
+                    $expires_at = null;
+                    if ($course && $course['payment_type'] === 'subscription') {
+                        $period = intval($course['subscription_period'] ?: 30);
+                        $expires_at = date('Y-m-d H:i:s', strtotime("+$period days"));
+                    }
+                    
+                    $stmt = $pdo->prepare("
+                        INSERT INTO enrollments (user_id, course_id, expires_at, created_at) 
+                        VALUES (?, ?, ?, NOW()) 
+                        ON DUPLICATE KEY UPDATE expires_at = ?, created_at = NOW()
+                    ");
+                    $stmt->execute([$pending_order['user_id'], $pending_order['course_id'], $expires_at, $expires_at]);
+                    $pdo->commit();
+                    
+                    try {
+                        require_once '../includes/mail_helper.php';
+                        notify_course_purchase($pdo, $pending_order['id'], $user['name'], $user['email'], $pending_order['course_id'], $course['title'], $pending_order['amount'], $course['payment_type']);
+                    } catch (Exception $mailEx) {}
+                }
+            }
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+        }
+    }
 }
 
 try {

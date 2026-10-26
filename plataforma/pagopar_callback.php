@@ -61,18 +61,20 @@ try {
             }
             
             if ($pagado) {
-                // 1. Obtener detalles de la orden
-                $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
-                $stmt->execute([$order_id]);
+                // 1. Obtener detalles de la orden (por payment_hash o por id local)
+                $stmt = $pdo->prepare("SELECT * FROM orders WHERE payment_hash = ? OR id = ? LIMIT 1");
+                $stmt->execute([$hash_pedido, $order_id]);
                 $order = $stmt->fetch();
                 
                 if ($order && $order['status'] === 'pending') {
+                    $real_order_id = intval($order['id']);
+                    
                     // Iniciar transacción de base de datos
                     $pdo->beginTransaction();
                     
                     // 2. Marcar la orden como pagada
                     $stmt = $pdo->prepare("UPDATE orders SET status = 'paid', payment_hash = ? WHERE id = ?");
-                    $stmt->execute([$hash_pedido, $order_id]);
+                    $stmt->execute([$hash_pedido, $real_order_id]);
                     
                     // 3. Consultar datos del curso para saber tipo de pago y duración
                     $stmt = $pdo->prepare("SELECT id, title, payment_type, subscription_period FROM courses WHERE id = ?");
@@ -94,7 +96,7 @@ try {
                     $stmt->execute([$order['user_id'], $order['course_id'], $expires_at, $expires_at]);
                     
                     $pdo->commit();
-                    log_ipn("✅ PEDIDO APROBADO: Acceso otorgado al usuario #" . $order['user_id'] . " para el curso #" . $order['course_id'] . " (Expira: " . ($expires_at ?: 'Ilimitado') . ").");
+                    log_ipn("✅ PEDIDO APROBADO: Acceso otorgado al usuario #" . $order['user_id'] . " para el curso #" . $order['course_id'] . " (Expira: " . ($expires_at ?: 'Ilimitado') . "). Orden #" . $real_order_id);
                     
                     // 5. Enviar notificaciones por correo (Confirmación al alumno + Alerta de venta al admin)
                     try {
@@ -105,7 +107,7 @@ try {
                         if ($buyer && $course) {
                             notify_course_purchase(
                                 $pdo, 
-                                $order_id, 
+                                $real_order_id, 
                                 $buyer['name'], 
                                 $buyer['email'], 
                                 $order['course_id'], 
@@ -118,12 +120,16 @@ try {
                     } catch (Exception $mailEx) {
                         log_ipn("⚠️ ERROR AL ENVIAR CORREO: " . $mailEx->getMessage());
                     }
+                } elseif ($order && $order['status'] === 'paid') {
+                    log_ipn("ℹ️ NOTIFICACIÓN REPETIDA: La orden #" . $order['id'] . " ya estaba marcada como pagada.");
+                } else {
+                    log_ipn("⚠️ AVISO: No se encontró orden pendiente con hash $hash_pedido ni ID $order_id en la base de datos.");
                 }
             } else {
                 // Notificación recibida pero el pago no se concretó
-                $stmt = $pdo->prepare("UPDATE orders SET status = 'failed' WHERE id = ? AND status = 'pending'");
-                $stmt->execute([$order_id]);
-                log_ipn("⚠️ NOTIFICACIÓN: Pedido #$order_id no está pagado en Pagopar.");
+                $stmt = $pdo->prepare("UPDATE orders SET status = 'failed' WHERE (payment_hash = ? OR id = ?) AND status = 'pending'");
+                $stmt->execute([$hash_pedido, $order_id]);
+                log_ipn("⚠️ NOTIFICACIÓN: Pedido #$order_id ($hash_pedido) no está pagado en Pagopar.");
             }
         }
     } else {
@@ -131,10 +137,11 @@ try {
         if (!empty($data['resultado'])) {
             foreach ($data['resultado'] as $result) {
                 $order_id = intval($result['numero_pedido'] ?? 0);
-                if ($order_id > 0) {
-                    $stmt = $pdo->prepare("UPDATE orders SET status = 'failed' WHERE id = ? AND status = 'pending'");
-                    $stmt->execute([$order_id]);
-                    log_ipn("❌ TRANSACCIÓN CANCELADA: Pedido #$order_id cancelado por el usuario.");
+                $hash_pedido = $result['hash_pedido'] ?? '';
+                if ($order_id > 0 || !empty($hash_pedido)) {
+                    $stmt = $pdo->prepare("UPDATE orders SET status = 'failed' WHERE (payment_hash = ? OR id = ?) AND status = 'pending'");
+                    $stmt->execute([$hash_pedido, $order_id]);
+                    log_ipn("❌ TRANSACCIÓN CANCELADA: Pedido #$order_id ($hash_pedido) cancelado por el usuario.");
                 }
             }
         }
