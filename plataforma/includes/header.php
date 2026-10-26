@@ -11,7 +11,7 @@ $user = get_logged_user();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? h($page_title) . ' - Santy Copy LMS' : 'Santy Copy LMS'; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?php echo get_base_path(); ?>/assets/style.css">
+    <link rel="stylesheet" href="<?php echo get_base_path(); ?>/assets/style.css?v=<?php echo @filemtime(dirname(__DIR__) . '/assets/style.css') ?: 2; ?>">
     <?php if (isset($extra_head)) echo $extra_head; ?>
 </head>
 <body>

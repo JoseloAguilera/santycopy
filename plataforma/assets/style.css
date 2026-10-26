@@ -236,54 +236,83 @@ textarea.form-control {
 
 /* Contenedor y botón de ojito para campos de contraseña */
 .password-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
 }
 
 .password-input-wrapper .form-control {
-    padding-right: 44px;
+    padding-right: 48px !important;
 }
 
 .password-toggle-btn {
-    position: absolute;
-    right: 6px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: transparent;
-    border: none;
-    color: var(--text-muted, #94a3b8);
-    cursor: pointer;
-    padding: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    line-height: 1;
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted, #94a3b8) !important;
+    cursor: pointer !important;
+    padding: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+    line-height: 1 !important;
+    z-index: 5 !important;
 }
 
 .password-toggle-btn:hover {
-    color: var(--heading-color, #ffffff);
-    background: rgba(255, 255, 255, 0.08);
+    color: var(--heading-color, #ffffff) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
 }
 
 .password-toggle-btn:focus {
-    outline: none;
-    color: var(--primary-color, #5564f1);
-    background: rgba(85, 100, 241, 0.1);
+    outline: none !important;
+    color: var(--primary-color, #5564f1) !important;
+    background: rgba(85, 100, 241, 0.12) !important;
 }
 
 .password-toggle-btn svg {
-    width: 18px;
-    height: 18px;
-    stroke: currentColor;
-    stroke-width: 2;
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    display: block;
+    width: 20px !important;
+    height: 20px !important;
+    stroke: currentColor !important;
+    stroke-width: 2 !important;
+    fill: none !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    pointer-events: none !important;
+}
+
+.password-toggle-btn .eye-open {
+    display: block !important;
+}
+
+.password-toggle-btn .eye-closed {
+    display: none !important;
+}
+
+.password-toggle-btn.is-visible .eye-open {
+    display: none !important;
+}
+
+.password-toggle-btn.is-visible .eye-closed {
+    display: block !important;
+}
+
+/* Autofill estilizado para que coincida con el tema oscuro del LMS */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px #161822 inset !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    caret-color: #ffffff !important;
+    border-color: var(--primary-color) !important;
+    transition: background-color 5000s ease-in-out 0s !important;
 }
 
 /* Login/Register Card layout */
