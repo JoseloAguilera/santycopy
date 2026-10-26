@@ -75,7 +75,7 @@ try {
                     $stmt->execute([$hash_pedido, $order_id]);
                     
                     // 3. Consultar datos del curso para saber tipo de pago y duración
-                    $stmt = $pdo->prepare("SELECT payment_type, subscription_period FROM courses WHERE id = ?");
+                    $stmt = $pdo->prepare("SELECT id, title, payment_type, subscription_period FROM courses WHERE id = ?");
                     $stmt->execute([$order['course_id']]);
                     $course = $stmt->fetch();
                     
@@ -95,6 +95,29 @@ try {
                     
                     $pdo->commit();
                     log_ipn("✅ PEDIDO APROBADO: Acceso otorgado al usuario #" . $order['user_id'] . " para el curso #" . $order['course_id'] . " (Expira: " . ($expires_at ?: 'Ilimitado') . ").");
+                    
+                    // 5. Enviar notificaciones por correo (Confirmación al alumno + Alerta de venta al admin)
+                    try {
+                        require_once 'includes/mail_helper.php';
+                        $stmtBuyer = $pdo->prepare("SELECT name, email FROM users WHERE id = ?");
+                        $stmtBuyer->execute([$order['user_id']]);
+                        $buyer = $stmtBuyer->fetch();
+                        if ($buyer && $course) {
+                            notify_course_purchase(
+                                $pdo, 
+                                $order_id, 
+                                $buyer['name'], 
+                                $buyer['email'], 
+                                $order['course_id'], 
+                                $course['title'], 
+                                $order['amount'], 
+                                $course['payment_type']
+                            );
+                            log_ipn("📧 CORREOS ENVIADOS: Notificación de compra enviada a " . $buyer['email']);
+                        }
+                    } catch (Exception $mailEx) {
+                        log_ipn("⚠️ ERROR AL ENVIAR CORREO: " . $mailEx->getMessage());
+                    }
                 }
             } else {
                 // Notificación recibida pero el pago no se concretó

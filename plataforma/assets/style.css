@@ -234,6 +234,58 @@ textarea.form-control {
     min-height: 80px;
 }
 
+/* Contenedor y botón de ojito para campos de contraseña */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.password-input-wrapper .form-control {
+    padding-right: 44px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    padding: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.password-toggle-btn:hover {
+    color: var(--heading-color, #ffffff);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.password-toggle-btn:focus {
+    outline: none;
+    color: var(--primary-color, #5564f1);
+    background: rgba(85, 100, 241, 0.1);
+}
+
+.password-toggle-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: block;
+}
+
 /* Login/Register Card layout */
 .auth-wrapper {
     display: flex;

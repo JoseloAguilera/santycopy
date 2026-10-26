@@ -20,4 +20,4 @@ define('PAGOPAR_PRIVATE_KEY', $pagopar_private);
 
 // URLs base de la API Pagopar v2.0
 define('PAGOPAR_API_URL', 'https://api.pagopar.com/api/comercios/2.0/iniciar-transaccion');
-define('PAGOPAR_CHECKOUT_URL', 'https://checkout.pagopar.com/pagos/');
+define('PAGOPAR_CHECKOUT_URL', 'https://www.pagopar.com/pagos/');
