@@ -84,12 +84,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // 2. Agregar lección / video / audio
+    // 2. Agregar lección / video / audio / pdf
     elseif ($action === 'add_lesson') {
         $lesson_title = trim($_POST['lesson_title'] ?? '');
         $video_url = trim($_POST['video_url'] ?? '');
         $order_number = intval($_POST['order_number'] ?? 0);
         $audio_file_name = null;
+        $pdf_file_name = null;
         
         if (empty($lesson_title)) {
             $error = 'El título de la clase es obligatorio.';
@@ -113,19 +114,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = 'Formato de audio no permitido. Solo se aceptan MP3, WAV, M4A, OGG, AAC y FLAC.';
                 }
             }
+
+            // Procesar subida de archivo PDF de lectura si fue proporcionado
+            if (empty($error) && isset($_FILES['pdf_file']) && $_FILES['pdf_file']['error'] === UPLOAD_ERR_OK) {
+                $file_tmp = $_FILES['pdf_file']['tmp_name'];
+                $file_name = $_FILES['pdf_file']['name'];
+                $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+                
+                if ($file_ext === 'pdf') {
+                    $pdf_file_name = 'pdf_lesson_' . $course_id . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.pdf';
+                    $upload_path = '../uploads/' . $pdf_file_name;
+                    
+                    if (!move_uploaded_file($file_tmp, $upload_path)) {
+                        $error = 'No se pudo mover el archivo PDF de la clase al servidor.';
+                        $pdf_file_name = null;
+                    }
+                } else {
+                    $error = 'Formato de lectura no permitido. Solo se aceptan documentos PDF (.pdf).';
+                }
+            }
             
             $is_bonus = (isset($_POST['is_bonus']) && $_POST['is_bonus'] == '1') ? 1 : 0;
 
             if (empty($error)) {
-                try {
-                    $stmt = $pdo->prepare("INSERT INTO lessons (course_id, title, video_url, audio_file, order_number, is_bonus) VALUES (?, ?, ?, ?, ?, ?)");
-                    $stmt->execute([$course_id, $lesson_title, $video_url, $audio_file_name, $order_number, $is_bonus]);
-                    $success = $is_bonus ? '¡Material Bonus agregado correctamente!' : 'Clase agregada correctamente.';
-                } catch (PDOException $e) {
-                    if ($audio_file_name && file_exists('../uploads/' . $audio_file_name)) {
-                        @unlink('../uploads/' . $audio_file_name);
+                if (empty($video_url) && empty($audio_file_name) && empty($pdf_file_name)) {
+                    $error = 'Debes proporcionar al menos un tipo de contenido para la clase: enlace de Video, archivo de Audio o documento PDF.';
+                } else {
+                    try {
+                        $stmt = $pdo->prepare("INSERT INTO lessons (course_id, title, video_url, audio_file, pdf_file, order_number, is_bonus) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                        $stmt->execute([$course_id, $lesson_title, $video_url, $audio_file_name, $pdf_file_name, $order_number, $is_bonus]);
+                        $success = $is_bonus ? '¡Material Bonus agregado correctamente!' : 'Clase agregada correctamente al paso a paso.';
+                    } catch (PDOException $e) {
+                        if ($audio_file_name && file_exists('../uploads/' . $audio_file_name)) {
+                            @unlink('../uploads/' . $audio_file_name);
+                        }
+                        if ($pdf_file_name && file_exists('../uploads/' . $pdf_file_name)) {
+                            @unlink('../uploads/' . $pdf_file_name);
+                        }
+                        $error = 'Error al agregar la clase: ' . $e->getMessage();
                     }
-                    $error = 'Error al agregar la clase: ' . $e->getMessage();
                 }
             }
         }
@@ -136,16 +163,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $lesson_id = intval($_POST['lesson_id'] ?? 0);
         if ($lesson_id > 0) {
             try {
-                // Obtener archivo de audio asociado para eliminarlo del servidor
-                $stmt = $pdo->prepare("SELECT audio_file FROM lessons WHERE id = ? AND course_id = ?");
+                // Obtener archivos asociados (audio y pdf) para eliminarlos del servidor
+                $stmt = $pdo->prepare("SELECT audio_file, pdf_file FROM lessons WHERE id = ? AND course_id = ?");
                 $stmt->execute([$lesson_id, $course_id]);
-                $audio_file = $stmt->fetchColumn();
+                $files = $stmt->fetch();
                 
                 $stmt = $pdo->prepare("DELETE FROM lessons WHERE id = ? AND course_id = ?");
                 $stmt->execute([$lesson_id, $course_id]);
                 
-                if ($audio_file && file_exists('../uploads/' . $audio_file)) {
-                    @unlink('../uploads/' . $audio_file);
+                if (!empty($files['audio_file']) && file_exists('../uploads/' . $files['audio_file'])) {
+                    @unlink('../uploads/' . $files['audio_file']);
+                }
+                if (!empty($files['pdf_file']) && file_exists('../uploads/' . $files['pdf_file'])) {
+                    @unlink('../uploads/' . $files['pdf_file']);
                 }
                 
                 $success = 'Clase eliminada correctamente.';
@@ -368,112 +398,243 @@ require_once '../includes/header.php';
             <div class="alert alert-success"><?php echo h($success); ?></div>
         <?php endif; ?>
         
-        <!-- Pestañas o secciones de edición -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
-            <!-- 1. Datos del curso -->
-            <div class="card">
-                <h3 style="font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">✏️ Datos del Curso</h3>
-                <form action="course_edit.php?id=<?php echo $course_id; ?>" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
-                    <input type="hidden" name="action" value="update_course">
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="title">Título del Curso</label>
-                        <input class="form-control" type="text" id="title" name="title" required value="<?php echo h($course['title']); ?>">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="description">Descripción</label>
-                        <textarea class="form-control" id="description" name="description" rows="4"><?php echo h($course['description']); ?></textarea>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <!-- 1. Datos Generales del Curso -->
+        <div class="card" style="margin-bottom: 30px;">
+            <h3 style="font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">✏️ Datos del Curso</h3>
+            <form action="course_edit.php?id=<?php echo $course_id; ?>" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
+                <input type="hidden" name="action" value="update_course">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
                         <div class="form-group">
-                            <label class="form-label" for="price">Precio Regular (Guaraníes)</label>
-                            <input class="form-control" type="number" id="price" name="price" required value="<?php echo $course['price']; ?>">
+                            <label class="form-label" for="title">Título del Curso</label>
+                            <input class="form-control" type="text" id="title" name="title" required value="<?php echo h($course['title']); ?>">
                         </div>
                         
                         <div class="form-group">
-                            <label class="form-label" for="payment_type">Tipo de Cobro</label>
-                            <select class="form-control" id="payment_type" name="payment_type" onchange="toggleSubscriptionFieldEdit(this.value)">
-                                <option value="one_time" <?php echo ($course['payment_type'] === 'one_time') ? 'selected' : ''; ?>>Compra única</option>
-                                <option value="subscription" <?php echo ($course['payment_type'] === 'subscription') ? 'selected' : ''; ?>>Suscripción</option>
-                            </select>
+                            <label class="form-label" for="description">Descripción</label>
+                            <textarea class="form-control" id="description" name="description" rows="4"><?php echo h($course['description']); ?></textarea>
                         </div>
                     </div>
 
-                    <!-- Configuración de Oferta Flash 15 Minutos -->
-                    <div style="background: rgba(85, 100, 241, 0.08); border: 1px solid var(--border-glow); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                        <h4 style="font-size: 13px; color: #a78bfa; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                            🔥 Oferta Flash de Bienvenida (Contador Limitado)
-                        </h4>
+                    <div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label" for="promo_price">Precio de Oferta (₲)</label>
-                                <input class="form-control" type="number" id="promo_price" name="promo_price" placeholder="Ej: 65000" value="<?php echo $course['promo_price'] ?? ''; ?>">
-                                <span style="font-size: 11px; color: var(--text-muted); margin-top: 2px; display: block;">Dejar vacío para desactivar oferta.</span>
+                            <div class="form-group">
+                                <label class="form-label" for="price">Precio Regular (Guaraníes)</label>
+                                <input class="form-control" type="number" id="price" name="price" required value="<?php echo $course['price']; ?>">
                             </div>
-                            <div class="form-group" style="margin-bottom: 0;">
-                                <label class="form-label" for="promo_duration_minutes">Duración (Minutos)</label>
-                                <input class="form-control" type="number" id="promo_duration_minutes" name="promo_duration_minutes" min="1" value="<?php echo $course['promo_duration_minutes'] ?: 15; ?>">
-                                <span style="font-size: 11px; color: var(--text-muted); margin-top: 2px; display: block;">Tiempo límite para comprar con descuento.</span>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="payment_type">Tipo de Cobro</label>
+                                <select class="form-control" id="payment_type" name="payment_type" onchange="toggleSubscriptionFieldEdit(this.value)">
+                                    <option value="one_time" <?php echo ($course['payment_type'] === 'one_time') ? 'selected' : ''; ?>>Compra única</option>
+                                    <option value="subscription" <?php echo ($course['payment_type'] === 'subscription') ? 'selected' : ''; ?>>Suscripción</option>
+                                </select>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group" id="sub-period-group-edit" style="display: <?php echo ($course['payment_type'] === 'subscription') ? 'block' : 'none'; ?>;">
-                        <label class="form-label" for="subscription_period">Periodo de Suscripción (en días)</label>
-                        <input class="form-control" type="number" id="subscription_period" name="subscription_period" min="1" value="<?php echo $course['subscription_period'] ?: 30; ?>">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="thumbnail">Miniatura del Curso</label>
-                        <?php if (!empty($course['thumbnail']) && file_exists('../uploads/' . $course['thumbnail'])): ?>
-                            <div style="margin-bottom: 10px;">
-                                <img src="../uploads/<?php echo h($course['thumbnail']); ?>" style="width: 120px; border-radius: 4px; border: 1px solid var(--border-color);" alt="Vista previa">
+
+                        <!-- Configuración de Oferta Flash 15 Minutos -->
+                        <div style="background: rgba(85, 100, 241, 0.08); border: 1px solid var(--border-glow); padding: 12px 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <h4 style="font-size: 13px; color: #a78bfa; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                                🔥 Oferta Flash de Bienvenida (Contador Limitado)
+                            </h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" for="promo_price" style="font-size: 11px;">Precio Oferta (₲)</label>
+                                    <input class="form-control" type="number" id="promo_price" name="promo_price" placeholder="Ej: 65000" value="<?php echo $course['promo_price'] ?? ''; ?>">
+                                    <span style="font-size: 10px; color: var(--text-muted); margin-top: 2px; display: block;">Vacío = sin oferta.</span>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label class="form-label" for="promo_duration_minutes" style="font-size: 11px;">Duración (Minutos)</label>
+                                    <input class="form-control" type="number" id="promo_duration_minutes" name="promo_duration_minutes" min="1" value="<?php echo $course['promo_duration_minutes'] ?: 15; ?>">
+                                    <span style="font-size: 10px; color: var(--text-muted); margin-top: 2px; display: block;">Límite para comprar.</span>
+                                </div>
                             </div>
-                        <?php endif; ?>
-                        <input class="form-control" type="file" id="thumbnail" name="thumbnail" accept="image/*" style="padding: 6px;">
+                        </div>
+                        
+                        <div class="form-group" id="sub-period-group-edit" style="display: <?php echo ($course['payment_type'] === 'subscription') ? 'block' : 'none'; ?>;">
+                            <label class="form-label" for="subscription_period">Periodo de Suscripción (en días)</label>
+                            <input class="form-control" type="number" id="subscription_period" name="subscription_period" min="1" value="<?php echo $course['subscription_period'] ?: 30; ?>">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="thumbnail">Miniatura del Curso</label>
+                            <?php if (!empty($course['thumbnail']) && file_exists('../uploads/' . $course['thumbnail'])): ?>
+                                <div style="margin-bottom: 8px;">
+                                    <img src="../uploads/<?php echo h($course['thumbnail']); ?>" style="width: 100px; border-radius: 4px; border: 1px solid var(--border-color);" alt="Vista previa">
+                                </div>
+                            <?php endif; ?>
+                            <input class="form-control" type="file" id="thumbnail" name="thumbnail" accept="image/*" style="padding: 6px;">
+                        </div>
                     </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-full">Guardar Cambios</button>
-                </form>
+                </div>
+                
+                <div style="text-align: right; margin-top: 10px;">
+                    <button type="submit" class="btn btn-primary" style="padding: 10px 25px;">💾 Guardar Cambios del Curso</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 2. SECCIÓN PRINCIPAL: Clases del Curso (Paso a Paso) -->
+        <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 30px; margin-bottom: 30px;">
+            <!-- Tabla de Clases del Paso a Paso -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                    <h3 style="font-size: 16px; margin: 0;">🎓 Paso a Paso del Curso (<?php echo count($lessons); ?> Clases)</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">Videos, Audios o Lecturas PDF</span>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px; text-align: center;">Orden</th>
+                                <th>Título de la Clase</th>
+                                <th>Formato / Archivo</th>
+                                <th style="width: 120px; text-align: center;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($lessons)): ?>
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 25px;">
+                                        No hay clases agregadas todavía.<br>Crea tu primera clase usando el formulario de la derecha.
+                                    </td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($lessons as $index => $les): ?>
+                                    <?php 
+                                    $is_les_bonus = !empty($les['is_bonus']);
+                                    $has_vid = !empty($les['video_url']);
+                                    $has_aud = !empty($les['audio_file']);
+                                    $has_pdf = !empty($les['pdf_file']);
+                                    ?>
+                                    <tr style="<?php echo $is_les_bonus ? 'background: rgba(167, 139, 250, 0.05);' : ''; ?>">
+                                        <td style="text-align: center; font-weight: 600; color: var(--primary-color);">
+                                            #<?php echo $les['order_number']; ?>
+                                        </td>
+                                        <td style="color: var(--heading-color); font-weight: 500;">
+                                            <div><?php echo h($les['title']); ?></div>
+                                            <?php if ($is_les_bonus): ?>
+                                                <span style="background: rgba(167, 139, 250, 0.2); color: #a78bfa; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; border: 1px solid rgba(167,139,250,0.4); display: inline-block; margin-top: 3px;">🎁 BONUS</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td style="font-size: 12px; color: var(--text-muted);">
+                                            <?php if ($has_vid): ?>
+                                                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;">
+                                                    🎥 Video: <span title="<?php echo h($les['video_url']); ?>"><?php echo h($les['video_url']); ?></span>
+                                                </div>
+                                            <?php endif; ?>
+                                            <?php if ($has_aud): ?>
+                                                <div style="color: #a78bfa; margin-top: 2px;">
+                                                    🎵 Audio: <a href="../uploads/<?php echo h($les['audio_file']); ?>" target="_blank" style="color: #a78bfa; text-decoration: underline;">Escuchar</a>
+                                                </div>
+                                            <?php endif; ?>
+                                            <?php if ($has_pdf): ?>
+                                                <div style="color: #ef4444; margin-top: 2px;">
+                                                    📕 Lectura PDF: <a href="../student/view_pdf.php?lesson_id=<?php echo $les['id']; ?>&type=lesson" target="_blank" style="color: #f87171; text-decoration: underline;">Abrir PDF</a>
+                                                </div>
+                                            <?php endif; ?>
+                                            <?php if (!$has_vid && !$has_aud && !$has_pdf): ?>
+                                                <span style="color: var(--text-muted); font-style: italic;">Sin archivo</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                                <form action="course_edit.php?id=<?php echo $course_id; ?>" method="POST">
+                                                    <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
+                                                    <input type="hidden" name="action" value="toggle_lesson_bonus">
+                                                    <input type="hidden" name="lesson_id" value="<?php echo $les['id']; ?>">
+                                                    <button type="submit" class="btn btn-secondary btn-sm" style="padding: 4px 6px; font-size: 10px;" title="<?php echo $is_les_bonus ? 'Convertir en clase regular' : 'Marcar como material bonus'; ?>">
+                                                        <?php echo $is_les_bonus ? 'Quitar Bonus' : '🎁 Bonus'; ?>
+                                                    </button>
+                                                </form>
+                                                <form action="course_edit.php?id=<?php echo $course_id; ?>" method="POST" onsubmit="return confirm('¿Seguro que quieres borrar esta clase?');">
+                                                    <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
+                                                    <input type="hidden" name="action" value="delete_lesson">
+                                                    <input type="hidden" name="lesson_id" value="<?php echo $les['id']; ?>">
+                                                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 6px; font-size: 10px;" title="Eliminar clase">✕</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             
-            <!-- 2. Recursos del curso (PDFs y Audios) -->
-            <div class="card">
-                <h3 style="font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">📂 Recursos del Curso (PDFs / Audios)</h3>
-                
-                <!-- Subir Recurso -->
-                <form action="course_edit.php?id=<?php echo $course_id; ?>" method="POST" enctype="multipart/form-data" style="margin-bottom: 25px;">
+            <!-- Formulario para Agregar Clase (Video, Audio o PDF) -->
+            <div class="card" style="border-color: var(--primary-color);">
+                <h3 style="font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                    ➕ Agregar Clase al Paso a Paso
+                </h3>
+                <form action="course_edit.php?id=<?php echo $course_id; ?>" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
-                    <input type="hidden" name="action" value="add_resource">
+                    <input type="hidden" name="action" value="add_lesson">
                     
                     <div class="form-group">
-                        <label class="form-label" for="resource_title">Nombre del Recurso</label>
-                        <input class="form-control" type="text" id="resource_title" name="resource_title" required placeholder="Ej: Guía PDF o Audio de Trabajo">
+                        <label class="form-label" for="lesson_title">Título de la Clase</label>
+                        <input class="form-control" type="text" id="lesson_title" name="lesson_title" required placeholder="Ej: Clase 1: Los secretos de un buen gancho">
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label" for="resource_file">Archivo (PDF o Audio MP3/WAV/M4A)</label>
-                        <input class="form-control" type="file" id="resource_file" name="resource_file" accept=".pdf,audio/*,.mp3,.wav,.m4a,.ogg,.aac,.flac" required style="padding: 6px;">
+                        <label class="form-label" for="video_url">🎥 Enlace de Video (YouTube / Vimeo / MP4)</label>
+                        <input class="form-control" type="url" id="video_url" name="video_url" placeholder="https://www.youtube.com/embed/... o https://youtu.be/...">
+                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 3px;">
+                            Enlace de video en YouTube (Privado/No listado) o Vimeo.
+                        </span>
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 15px;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--heading-color);">
+                    <div class="form-group">
+                        <label class="form-label" for="audio_file">🎵 Archivo de Audio (Guardado en Servidor)</label>
+                        <input class="form-control" type="file" id="audio_file" name="audio_file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.aac,.flac" style="padding: 6px;">
+                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 3px;">
+                            Sube un audio (MP3, WAV, M4A) para reproducir de forma protegida.
+                        </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="pdf_file">📕 Documento PDF de Lectura (Clase en PDF)</label>
+                        <input class="form-control" type="file" id="pdf_file" name="pdf_file" accept=".pdf,application/pdf" style="padding: 6px;">
+                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 3px;">
+                            Sube una guía o lección en PDF que el alumno podrá leer en pantalla.
+                        </span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="order_number">Número de Orden</label>
+                        <input class="form-control" type="number" id="order_number" name="order_number" min="1" value="<?php echo empty($lessons) ? 1 : (max(array_column($lessons, 'order_number')) + 1); ?>">
+                    </div>
+
+                    <div class="form-group" style="background: rgba(167, 139, 250, 0.08); border: 1px solid var(--border-glow); padding: 12px; border-radius: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: #a78bfa; font-weight: 600;">
                             <input type="checkbox" name="is_bonus" value="1" style="width: 16px; height: 16px;">
-                            <span>🎁 Marcar como Material Bonus</span>
+                            <span>🎁 Marcar como Contenido Bonus (No afectará el % de progreso)</span>
                         </label>
                     </div>
                     
-                    <button type="submit" class="btn btn-secondary btn-full">📤 Subir Recurso al Servidor</button>
+                    <button type="submit" class="btn btn-primary btn-full" style="font-weight: 600;">➕ Añadir Clase al Paso a Paso</button>
                 </form>
+            </div>
+        </div>
+        
+        <!-- 3. SECCIÓN SECUNDARIA: Recursos de Apoyo Adicionales -->
+        <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 30px; margin-bottom: 30px;">
+            <!-- Listado de Recursos de Apoyo -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                    <h3 style="font-size: 16px; margin: 0;">📂 Recursos y Material de Apoyo Adicional (<?php echo count($resources); ?>)</h3>
+                    <span style="font-size: 12px; color: var(--text-muted);">PDFs o Audios de consulta</span>
+                </div>
                 
-                <!-- Listado de Recursos -->
-                <h4 style="font-size: 14px; margin-bottom: 10px;">Archivos Disponibles</h4>
                 <div style="display: flex; flex-direction: column; gap: 10px;">
                     <?php if (empty($resources)): ?>
-                        <p style="font-size: 13px; color: var(--text-muted); text-align: center;">No hay recursos subidos para este curso.</p>
+                        <p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px;">
+                            No hay recursos de apoyo adicionales subidos para este curso.
+                        </p>
                     <?php else: ?>
                         <?php foreach ($resources as $res): ?>
                             <?php 
@@ -492,7 +653,7 @@ require_once '../includes/header.php';
                                             <?php endif; ?>
                                         </div>
                                         <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px;">
-                                            <a href="../uploads/<?php echo h($res['file_path']); ?>" target="_blank" style="font-size: 11px;">
+                                            <a href="../student/view_pdf.php?id=<?php echo $res['id']; ?>" target="_blank" style="font-size: 11px;">
                                                 <?php echo $is_audio ? 'Escuchar Audio' : 'Abrir PDF'; ?>
                                             </a>
                                             <span style="color: var(--text-muted); font-size: 10px;">•</span>
@@ -507,7 +668,7 @@ require_once '../includes/header.php';
                                         </div>
                                     </div>
                                 </div>
-                                <form action="course_edit.php?id=<?php echo $course_id; ?>" method="POST" onsubmit="return confirm('¿Eliminar este recurso?');">
+                                <form action="course_edit.php?id=<?php echo $course_id; ?>" method="POST" onsubmit="return confirm('¿Eliminar este recurso de apoyo?');">
                                     <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
                                     <input type="hidden" name="action" value="delete_resource">
                                     <input type="hidden" name="resource_id" value="<?php echo $res['id']; ?>">
@@ -518,122 +679,34 @@ require_once '../includes/header.php';
                     <?php endif; ?>
                 </div>
             </div>
-        </div>
-        
-        <!-- Sección de Clases (Videos y Audios) y Orden -->
-        <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 30px; margin-bottom: 30px;">
-            <div class="card">
-                <h3 style="font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">🎥 🎵 Clases y Bonus del Curso</h3>
-                
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th style="width: 60px; text-align: center;">Orden</th>
-                                <th>Título de la Clase</th>
-                                <th>Tipo / Contenido</th>
-                                <th style="width: 120px; text-align: center;">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (empty($lessons)): ?>
-                                <tr>
-                                    <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No hay clases agregadas. Agrega tu primera clase a la derecha.</td>
-                                </tr>
-                            <?php else: ?>
-                                <?php foreach ($lessons as $index => $les): ?>
-                                    <?php $is_les_bonus = !empty($les['is_bonus']); ?>
-                                    <tr style="<?php echo $is_les_bonus ? 'background: rgba(167, 139, 250, 0.05);' : ''; ?>">
-                                        <td style="text-align: center; font-weight: 600; color: var(--primary-color);">
-                                            #<?php echo $les['order_number']; ?>
-                                        </td>
-                                        <td style="color: var(--heading-color); font-weight: 500;">
-                                            <div><?php echo h($les['title']); ?></div>
-                                            <?php if ($is_les_bonus): ?>
-                                                <span style="background: rgba(167, 139, 250, 0.2); color: #a78bfa; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 700; border: 1px solid rgba(167,139,250,0.4); display: inline-block; margin-top: 3px;">🎁 BONUS</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td style="font-size: 12px; color: var(--text-muted);">
-                                            <?php if (!empty($les['video_url'])): ?>
-                                                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;">
-                                                    🎥 <?php echo h($les['video_url']); ?>
-                                                </div>
-                                            <?php endif; ?>
-                                            <?php if (!empty($les['audio_file'])): ?>
-                                                <div style="color: #a78bfa; margin-top: 2px;">
-                                                    🎵 Audio: <a href="../uploads/<?php echo h($les['audio_file']); ?>" target="_blank" style="color: #a78bfa; text-decoration: underline;">Escuchar</a>
-                                                </div>
-                                            <?php endif; ?>
-                                            <?php if (empty($les['video_url']) && empty($les['audio_file'])): ?>
-                                                <span style="color: var(--text-muted); italic">Sin archivo</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td style="text-align: center;">
-                                            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-                                                <form action="course_edit.php?id=<?php echo $course_id; ?>" method="POST">
-                                                    <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
-                                                    <input type="hidden" name="action" value="toggle_lesson_bonus">
-                                                    <input type="hidden" name="lesson_id" value="<?php echo $les['id']; ?>">
-                                                    <button type="submit" class="btn btn-secondary btn-sm" style="padding: 4px 6px; font-size: 10px;" title="<?php echo $is_les_bonus ? 'Convertir en clase regular' : 'Marcar como material bonus'; ?>">
-                                                        <?php echo $is_les_bonus ? 'Quitar Bonus' : '🎁 Bonus'; ?>
-                                                    </button>
-                                                </form>
-                                                <form action="course_edit.php?id=<?php echo $course_id; ?>" method="POST" onsubmit="return confirm('¿Seguro que quieres borrar esta clase?');">
-                                                    <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
-                                                    <input type="hidden" name="action" value="delete_lesson">
-                                                    <input type="hidden" name="lesson_id" value="<?php echo $les['id']; ?>">
-                                                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 6px; font-size: 10px;">✕</button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
             
+            <!-- Subir Recurso de Apoyo -->
             <div class="card">
-                <h3 style="font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">➕ Agregar Clase (Video / Audio)</h3>
+                <h3 style="font-size: 16px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                    📤 Subir Recurso de Apoyo
+                </h3>
                 <form action="course_edit.php?id=<?php echo $course_id; ?>" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
-                    <input type="hidden" name="action" value="add_lesson">
+                    <input type="hidden" name="action" value="add_resource">
                     
                     <div class="form-group">
-                        <label class="form-label" for="lesson_title">Título de la Clase / Bonus</label>
-                        <input class="form-control" type="text" id="lesson_title" name="lesson_title" required placeholder="Ej: Masterclass Bonus: Estrategia de Cierre">
+                        <label class="form-label" for="resource_title">Nombre del Recurso</label>
+                        <input class="form-control" type="text" id="resource_title" name="resource_title" required placeholder="Ej: Plantilla de correo o PDF de apoyo">
                     </div>
                     
                     <div class="form-group">
-                        <label class="form-label" for="video_url">Enlace de Video (YouTube / Vimeo / MP4)</label>
-                        <input class="form-control" type="url" id="video_url" name="video_url" placeholder="https://www.youtube.com/embed/... o https://youtu.be/...">
-                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px;">
-                            Pega el enlace de tu video de YouTube (Privado o No listado).
-                        </span>
+                        <label class="form-label" for="resource_file">Archivo (PDF o Audio MP3/WAV)</label>
+                        <input class="form-control" type="file" id="resource_file" name="resource_file" accept=".pdf,audio/*,.mp3,.wav,.m4a,.ogg,.aac,.flac" required style="padding: 6px;">
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label" for="audio_file">🎵 Archivo de Audio (Guardado en Servidor)</label>
-                        <input class="form-control" type="file" id="audio_file" name="audio_file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.aac,.flac" style="padding: 6px;">
-                        <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px;">
-                            Sube una lección en audio que se reproducirá de forma protegida.
-                        </span>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="order_number">Número de Orden</label>
-                        <input class="form-control" type="number" id="order_number" name="order_number" min="1" value="<?php echo empty($lessons) ? 1 : (max(array_column($lessons, 'order_number')) + 1); ?>">
-                    </div>
-
-                    <div class="form-group" style="background: rgba(167, 139, 250, 0.08); border: 1px solid var(--border-glow); padding: 12px; border-radius: 8px;">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: #a78bfa; font-weight: 600;">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; color: var(--heading-color);">
                             <input type="checkbox" name="is_bonus" value="1" style="width: 16px; height: 16px;">
-                            <span>🎁 Marcar como Contenido Bonus (No afectará el % de progreso)</span>
+                            <span>🎁 Marcar como Material Bonus</span>
                         </label>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary btn-full">Añadir Contenido</button>
+                    <button type="submit" class="btn btn-secondary btn-full">📤 Subir Recurso al Servidor</button>
                 </form>
             </div>
         </div>

@@ -75,6 +75,7 @@ try {
         `title` VARCHAR(150) NOT NULL,
         `video_url` VARCHAR(255) DEFAULT NULL,
         `audio_file` VARCHAR(255) DEFAULT NULL,
+        `pdf_file` VARCHAR(255) DEFAULT NULL,
         `order_number` INT NOT NULL DEFAULT 0,
         `is_bonus` TINYINT(1) DEFAULT 0,
         `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -147,12 +148,12 @@ try {
     
     // Insertar Administrador por defecto
     $adminPassword = password_hash('admin123', PASSWORD_BCRYPT);
-    $stmt = $pdo->prepare("INSERT INTO `users` (`name`, `email`, `password`, `role`) VALUES (?, ?, ?, 'admin')");
-    $stmt->execute(['Santy Admin', 'admin@santycopy.com', $adminPassword]);
+    $stmtUser = $pdo->prepare("INSERT INTO `users` (`name`, `email`, `password`, `role`) VALUES (?, ?, ?, ?)");
+    $stmtUser->execute(['Santy Admin', 'admin@santycopy.com', $adminPassword, 'admin']);
     
     // Insertar Estudiante por defecto
     $studentPassword = password_hash('alumno123', PASSWORD_BCRYPT);
-    $stmt->execute(['Juan Pérez', 'alumno@santycopy.com', $studentPassword]);
+    $stmtUser->execute(['Juan Pérez', 'alumno@santycopy.com', $studentPassword, 'student']);
 
     // Insertar Cursos
     $stmtCourse = $pdo->prepare("INSERT INTO `courses` (`id`, `title`, `description`, `price`, `payment_type`, `subscription_period`) VALUES (?, ?, ?, ?, ?, ?)");

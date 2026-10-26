@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `lessons` (
     `title` VARCHAR(150) NOT NULL,
     `video_url` VARCHAR(255) DEFAULT NULL,
     `audio_file` VARCHAR(255) DEFAULT NULL,
+    `pdf_file` VARCHAR(255) DEFAULT NULL,
     `order_number` INT NOT NULL DEFAULT 0,
     `is_bonus` TINYINT(1) DEFAULT 0,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

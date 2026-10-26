@@ -8,6 +8,12 @@ if (!defined('ACCESS_ALLOWED')) {
 
 // Cargar variables de entorno desde .env (obligatorio)
 $env_path = dirname(__DIR__, 2) . '/.env';
+if (!file_exists($env_path)) {
+    $alt_path = dirname(__DIR__) . '/.env';
+    if (file_exists($alt_path)) {
+        $env_path = $alt_path;
+    }
+}
 
 if (!file_exists($env_path)) {
     header('HTTP/1.1 500 Internal Server Error');
@@ -28,6 +34,23 @@ foreach ($lines as $line) {
         $_ENV[$key] = $value;
         putenv("$key=$value");
     }
+}
+
+// Definir constante de entorno de la aplicación ('development' o 'production')
+if (!defined('APP_ENV')) {
+    $detected_env = strtolower(trim($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: 'development'));
+    define('APP_ENV', $detected_env);
+}
+
+// Configurar reporte de errores según el entorno
+if (in_array(APP_ENV, ['dev', 'development', 'local', 'test'])) {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 }
 
 // Validar que las credenciales obligatorias de base de datos estén presentes en el .env

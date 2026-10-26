@@ -89,3 +89,22 @@ function validate_csrf($token) {
     }
     return true;
 }
+
+// Obtener el entorno actual de la aplicación
+function get_app_env() {
+    if (defined('APP_ENV')) {
+        return APP_ENV;
+    }
+    return strtolower(trim($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: 'development'));
+}
+
+// Comprobar si estamos en entorno de desarrollo/local
+function is_dev_env() {
+    return in_array(get_app_env(), ['dev', 'development', 'local', 'test']);
+}
+
+// Comprobar si estamos en entorno de producción
+function is_prod_env() {
+    return !is_dev_env();
+}
+

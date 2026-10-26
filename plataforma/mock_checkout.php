@@ -142,15 +142,17 @@ function simulatePayment(isSuccess) {
                 },
                 body: JSON.stringify(payload)
             })
-            .then(response => response.text())
+            .then(response => response.json().catch(() => response.text()))
             .then(data => {
-                if (data.trim() === 'OK') {
+                const isOk = (typeof data === 'object' && (data.respuesta === true || data.resultado === 'OK')) || data === 'OK';
+                if (isOk) {
                     statusContainer.innerHTML = '<div class="alert alert-success">🎉 ¡Pago exitoso simulado! Redirigiendo a tu curso...</div>';
                     setTimeout(() => {
                         window.location.href = 'student/index.php?payment=success';
                     }, 1500);
                 } else {
-                    statusContainer.innerHTML = '<div class="alert alert-danger">❌ Error en la respuesta del Callback: ' + data + '</div>';
+                    const msg = typeof data === 'object' ? (data.resultado || JSON.stringify(data)) : data;
+                    statusContainer.innerHTML = '<div class="alert alert-danger">❌ Error en la respuesta del Callback: ' + msg + '</div>';
                 }
             })
             .catch(error => {

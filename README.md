@@ -62,7 +62,7 @@ Este repositorio contiene el sitio web oficial de Santy Copy, el cual integra su
     ```
 4.  **Ejecutar Instalación:**
     Accede en tu navegador a:
-    `https://tudominio.com/plataforma/install.php`
+    `https://santycopy.com/plataforma/install.php`
 5.  **Seguridad:**
     Una vez finalizada la instalación con éxito en producción, **elimina o renombra** el archivo `plataforma/install.php` para evitar reinstalaciones accidentales.
 
@@ -75,13 +75,16 @@ Por defecto, el sistema se instala en entorno de desarrollo (`PAGOPAR_ENV = 'dev
 Cuando estés listo para recibir pagos reales:
 
 1.  Ingresa a tu panel de **Pagopar.com** y ve a la sección **Desarrollador** > **Integrar con mi sitio web**.
-2.  Copia tu **Token Público** y **Token Privado**.
-3.  Define la **URL de respuesta (Webhook)** apuntando a: `https://tudominio.com/plataforma/pagopar_callback.php`
-4.  Edita el archivo [plataforma/config/pagopar.php](file:///Applications/XAMPP/xamppfiles/htdocs/santycopy/plataforma/config/pagopar.php) y actualiza los valores:
-    ```php
-    define('PAGOPAR_ENV', 'production'); // Cambiar de 'development' a 'production'
-    define('PAGOPAR_PUBLIC_KEY', 'TU_TOKEN_PUBLICO');
-    define('PAGOPAR_PRIVATE_KEY', 'TU_TOKEN_PRIVADO');
+2.  Copia tu **Token Público** y **Token Privado** (en tu archivo `.env`).
+3.  Configura las URLs en el formulario de Pagopar:
+    *   **URL de Redireccionamiento:** `https://santycopy.com/plataforma/student/index.php?payment=success&hash=($hash)`
+    *   **URL de Respuesta (Webhook):** `https://santycopy.com/plataforma/pagopar_callback.php`
+4.  En producción, actualiza en tu `.env` o en `plataforma/config/pagopar.php`:
+    ```env
+    APP_ENV=production
+    PAGOPAR_ENV=production
+    PAGOPAR_PUBLIC_KEY=680c16592a60684cb1b27f2dfd8f9d59
+    PAGOPAR_PRIVATE_KEY=d7b71d52cec0759bbeec3be931a14689
     ```
 
 ---

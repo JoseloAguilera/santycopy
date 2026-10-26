@@ -6,7 +6,8 @@ if (!defined('ACCESS_ALLOWED')) {
 }
 
 // Cargar credenciales desde variables de entorno (.env) con fallbacks
-$pagopar_env = $_ENV['PAGOPAR_ENV'] ?? getenv('PAGOPAR_ENV') ?: 'development';
+$app_env = defined('APP_ENV') ? APP_ENV : ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: 'development');
+$pagopar_env = $_ENV['PAGOPAR_ENV'] ?? getenv('PAGOPAR_ENV') ?: $app_env;
 $pagopar_public = $_ENV['PAGOPAR_PUBLIC_KEY'] ?? getenv('PAGOPAR_PUBLIC_KEY') ?: '';
 $pagopar_private = $_ENV['PAGOPAR_PRIVATE_KEY'] ?? getenv('PAGOPAR_PRIVATE_KEY') ?: '';
 

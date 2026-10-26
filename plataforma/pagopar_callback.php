@@ -4,17 +4,30 @@
 require_once 'config/db.php';
 require_once 'config/pagopar.php';
 
+// Responder siempre en formato JSON requerido por la especificación de Pagopar
+header('Content-Type: application/json');
+
 // Leer datos JSON enviados en el cuerpo del POST
 $raw_input = file_get_contents('php://input');
 $data = json_decode($raw_input, true);
 
 if (!$data) {
     http_response_code(400);
-    die("Petición inválida: sin cuerpo JSON.");
+    echo json_encode([
+        'respuesta' => false,
+        'resultado' => 'Petición inválida: sin cuerpo JSON o datos mal formados.'
+    ]);
+    exit;
 }
 
-// Loguear la petición entrante para auditoría y depuración en archivo local
-file_put_contents('pagopar_ipn_log.txt', "[" . date('Y-m-d H:i:s') . "] IPN RECIBIDA: " . $raw_input . "\n", FILE_APPEND);
+// Helper de logging seguro para no romper la respuesta JSON si hay problemas de permisos
+$log_file = __DIR__ . '/pagopar_ipn_log.txt';
+function log_ipn($msg) {
+    global $log_file;
+    @file_put_contents($log_file, "[" . date('Y-m-d H:i:s') . "] " . $msg . "\n", FILE_APPEND);
+}
+
+log_ipn("IPN RECIBIDA: " . $raw_input);
 
 // Verificar la respuesta general
 $respuesta_exitosa = isset($data['respuesta']) && $data['respuesta'] === true;
@@ -38,9 +51,13 @@ try {
             
             if ($token_recibido !== $token_esperado) {
                 // Token inválido, posible fraude
-                file_put_contents('pagopar_ipn_log.txt', "[" . date('Y-m-d H:i:s') . "] ❌ FRAUDE DETECTADO: Token recibido ($token_recibido) no coincide con esperado ($token_esperado) para el pedido #$order_id.\n", FILE_APPEND);
+                log_ipn("❌ FRAUDE DETECTADO: Token recibido ($token_recibido) no coincide con esperado ($token_esperado) para el pedido #$order_id.");
                 http_response_code(403);
-                die("Token inválido");
+                echo json_encode([
+                    'respuesta' => false,
+                    'resultado' => 'Token inválido'
+                ]);
+                exit;
             }
             
             if ($pagado) {
@@ -77,13 +94,13 @@ try {
                     $stmt->execute([$order['user_id'], $order['course_id'], $expires_at, $expires_at]);
                     
                     $pdo->commit();
-                    file_put_contents('pagopar_ipn_log.txt', "[" . date('Y-m-d H:i:s') . "] ✅ PEDIDO APROBADO: Acceso otorgado al usuario #" . $order['user_id'] . " para el curso #" . $order['course_id'] . " (Expira: " . ($expires_at ?: 'Ilimitado') . ").\n", FILE_APPEND);
+                    log_ipn("✅ PEDIDO APROBADO: Acceso otorgado al usuario #" . $order['user_id'] . " para el curso #" . $order['course_id'] . " (Expira: " . ($expires_at ?: 'Ilimitado') . ").");
                 }
             } else {
                 // Notificación recibida pero el pago no se concretó
                 $stmt = $pdo->prepare("UPDATE orders SET status = 'failed' WHERE id = ? AND status = 'pending'");
                 $stmt->execute([$order_id]);
-                file_put_contents('pagopar_ipn_log.txt', "[" . date('Y-m-d H:i:s') . "] ⚠️ NOTIFICACIÓN: Pedido #$order_id no está pagado en Pagopar.\n", FILE_APPEND);
+                log_ipn("⚠️ NOTIFICACIÓN: Pedido #$order_id no está pagado en Pagopar.");
             }
         }
     } else {
@@ -94,20 +111,28 @@ try {
                 if ($order_id > 0) {
                     $stmt = $pdo->prepare("UPDATE orders SET status = 'failed' WHERE id = ? AND status = 'pending'");
                     $stmt->execute([$order_id]);
-                    file_put_contents('pagopar_ipn_log.txt', "[" . date('Y-m-d H:i:s') . "] ❌ TRANSACCIÓN CANCELADA: Pedido #$order_id cancelado por el usuario.\n", FILE_APPEND);
+                    log_ipn("❌ TRANSACCIÓN CANCELADA: Pedido #$order_id cancelado por el usuario.");
                 }
             }
         }
     }
     
-    // Pagopar recomienda retornar el mismo JSON que enviaron o 'OK'
-    echo "OK";
+    // Pagopar requiere estrictamente imprimir JSON de confirmación:
+    echo json_encode([
+        'respuesta' => true,
+        'resultado' => 'OK'
+    ]);
+    exit;
     
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    file_put_contents('pagopar_ipn_log.txt', "[" . date('Y-m-d H:i:s') . "] ❌ ERROR FATAL IPN: " . $e->getMessage() . "\n", FILE_APPEND);
+    log_ipn("❌ ERROR FATAL IPN: " . $e->getMessage());
     http_response_code(500);
-    echo "Error del servidor al procesar callback.";
+    echo json_encode([
+        'respuesta' => false,
+        'resultado' => 'Error del servidor al procesar callback: ' . $e->getMessage()
+    ]);
+    exit;
 }

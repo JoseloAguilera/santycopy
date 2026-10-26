@@ -61,28 +61,50 @@ try {
         $monto_total = floatval($effective_price);
         $token = sha1(PAGOPAR_PRIVATE_KEY . $order_id . strval($monto_total));
         
-        // Preparar payload JSON
+        // Preparar payload JSON completo compatible con Pagopar v2
+        $comp = [
+            'nombre' => $user['name'] ?: 'Estudiante Santy Copy',
+            'email' => $user['email'],
+            'documento' => '1234567',
+            'telefono' => '0981123456',
+            'direccion' => 'Asuncion, Paraguay',
+            'ciudad' => 1,
+            'ruc' => '1234567-8',
+            'coordenadas' => '-25.2821,-57.6351',
+            'razon_social' => $user['name'] ?: 'Estudiante Santy Copy',
+            'tipo_documento' => 'CI',
+            'direccion_referencia' => ''
+        ];
+
+        $items = [
+            [
+                'ciudad' => '1',
+                'nombre' => $course['title'],
+                'cantidad' => 1,
+                'categoria' => '909', // Servicios digitales
+                'public_key' => PAGOPAR_PUBLIC_KEY,
+                'url_imagen' => '',
+                'descripcion' => 'Acceso al curso: ' . $course['title'],
+                'id_producto' => intval($course['id']),
+                'precio_total' => intval($monto_total),
+                'vendedor_telefono' => '0981123456',
+                'vendedor_direccion' => 'Asuncion, Paraguay',
+                'vendedor_direccion_referencia' => '',
+                'vendedor_direccion_coordenadas' => '-25.2821,-57.6351'
+            ]
+        ];
+
         $payload = [
             'token' => $token,
+            'comprador' => $comp,
             'public_key' => PAGOPAR_PUBLIC_KEY,
-            'monto_total' => $monto_total,
+            'monto_total' => intval($monto_total),
             'tipo_pedido' => 'VENTA-COMERCIO',
+            'compras_items' => $items,
+            'fecha_maxima_pago' => date('Y-m-d H:i:s', strtotime('+3 days')),
             'id_pedido_comercio' => (string)$order_id,
             'descripcion_resumen' => 'Acceso al curso: ' . $course['title'],
-            'comprador' => [
-                'nombre' => $user['name'],
-                'email' => $user['email'],
-                'documento' => '0000000', // Campo genérico o requerido
-                'tipo_documento' => 'CI',
-                'telefono' => '0900000000'
-            ],
-            'compras_items' => [
-                [
-                    'nombre' => $course['title'],
-                    'cantidad' => 1,
-                    'precio_total' => $monto_total
-                ]
-            ]
+            'forma_pago' => 9
         ];
         
         // Ejecutar llamada cURL

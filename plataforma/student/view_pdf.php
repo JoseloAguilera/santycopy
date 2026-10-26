@@ -10,25 +10,39 @@ require_login();
 $user = get_logged_user();
 
 $resource_id = intval($_GET['id'] ?? 0);
+$lesson_id = intval($_GET['lesson_id'] ?? 0);
+$type = $_GET['type'] ?? ($lesson_id > 0 ? 'lesson' : 'resource');
 
-if ($resource_id <= 0) {
+if ($resource_id <= 0 && $lesson_id <= 0) {
     http_response_code(400);
-    die("ID de recurso inválido.");
+    die("ID de recurso o clase inválido.");
 }
 
 try {
-    $stmt = $pdo->prepare("
-        SELECT r.*, c.title AS course_title 
-        FROM resources r
-        JOIN courses c ON r.course_id = c.id
-        WHERE r.id = ?
-    ");
-    $stmt->execute([$resource_id]);
-    $res = $stmt->fetch();
+    if ($type === 'lesson' || $lesson_id > 0) {
+        $target_id = $lesson_id > 0 ? $lesson_id : $resource_id;
+        $stmt = $pdo->prepare("
+            SELECT l.id, l.title, l.pdf_file AS file_path, l.course_id, c.title AS course_title 
+            FROM lessons l
+            JOIN courses c ON l.course_id = c.id
+            WHERE l.id = ?
+        ");
+        $stmt->execute([$target_id]);
+        $res = $stmt->fetch();
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT r.*, c.title AS course_title 
+            FROM resources r
+            JOIN courses c ON r.course_id = c.id
+            WHERE r.id = ?
+        ");
+        $stmt->execute([$resource_id]);
+        $res = $stmt->fetch();
+    }
 
-    if (!$res) {
+    if (!$res || empty($res['file_path'])) {
         http_response_code(404);
-        die("El recurso solicitado no existe.");
+        die("El material solicitado no existe o no tiene un archivo asignado.");
     }
 
     // Si el usuario no es admin, validar que esté matriculado activamente en el curso

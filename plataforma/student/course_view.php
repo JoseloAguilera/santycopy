@@ -261,13 +261,70 @@ require_once '../includes/header.php';
             <a href="index.php">Mis Cursos</a> &gt; <span><?php echo h($course['title']); ?></span>
         </div>
         
-        <!-- Contenedor del Reproductor de Video -->
-        <div class="video-container">
-            <?php echo render_video_player($active_lesson['video_url'], !empty($active_lesson['audio_file'])); ?>
-        </div>
+        <?php 
+        $has_active_vid = !empty($active_lesson['video_url']);
+        $has_active_aud = !empty($active_lesson['audio_file']);
+        $has_active_pdf = !empty($active_lesson['pdf_file']);
+        ?>
+
+        <?php if ($has_active_vid): ?>
+            <!-- Contenedor del Reproductor de Video -->
+            <div class="video-container">
+                <?php echo render_video_player($active_lesson['video_url']); ?>
+            </div>
+        <?php elseif ($has_active_pdf && !$has_active_aud): ?>
+            <!-- Contenedor del Documento PDF de la Clase -->
+            <div class="pdf-lesson-container" style="background: rgba(18, 18, 24, 0.85); border: 1px solid var(--border-glow); border-radius: 12px; overflow: hidden; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 22px;">📕</span>
+                        <div>
+                            <h4 style="font-size: 15px; margin: 0; color: var(--heading-color);">Material de Lectura de la Clase</h4>
+                            <span style="font-size: 12px; color: var(--text-muted);">Visualización protegida en pantalla</span>
+                        </div>
+                    </div>
+                    <a href="view_pdf.php?lesson_id=<?php echo $active_lesson['id']; ?>&type=lesson" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 12px;">
+                        ↗ Pantalla Completa
+                    </a>
+                </div>
+                <iframe src="view_pdf.php?lesson_id=<?php echo $active_lesson['id']; ?>&type=lesson#toolbar=0&navpanes=0" style="width: 100%; height: 750px; border: none; display: block;" allowfullscreen></iframe>
+            </div>
+        <?php elseif ($has_active_aud && !$has_active_vid): ?>
+            <!-- Banner de Lección en Audio -->
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:160px;background:linear-gradient(135deg, rgba(85,100,241,0.15) 0%, rgba(15,15,25,0.95) 100%);border:1px solid var(--border-glow);border-radius:12px;color:var(--heading-color);text-align:center;padding:25px;margin-bottom:20px;">
+                <span style="font-size:44px;margin-bottom:8px;">🎙️</span>
+                <h3 style="font-size:18px;margin-bottom:4px;">Lección en Formato Audio</h3>
+                <p style="font-size:13px;color:var(--text-muted);margin:0;">Esta lección incluye audio alojado en el servidor. Utiliza el reproductor a continuación para escucharla.</p>
+            </div>
+        <?php else: ?>
+            <div class="video-container">
+                <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-muted);">🎥 No hay video o contenido multimedia cargado para esta clase.</div>
+            </div>
+        <?php endif; ?>
         
         <!-- Reproductor de Audio si la clase tiene audio subido al servidor -->
-        <?php echo render_audio_player($active_lesson['audio_file'] ?? ''); ?>
+        <?php if ($has_active_aud): ?>
+            <?php echo render_audio_player($active_lesson['audio_file']); ?>
+        <?php endif; ?>
+
+        <!-- Si la clase tiene video o audio Y ADEMÁS tiene PDF de lectura adjunto -->
+        <?php if (($has_active_vid || $has_active_aud) && $has_active_pdf): ?>
+            <div class="pdf-lesson-container" style="background: rgba(18, 18, 24, 0.85); border: 1px solid var(--border-glow); border-radius: 12px; overflow: hidden; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">📕</span>
+                        <div>
+                            <h4 style="font-size: 14px; margin: 0; color: var(--heading-color);">Material de Lectura de la Clase (PDF)</h4>
+                            <span style="font-size: 12px; color: var(--text-muted);">Lectura en pantalla</span>
+                        </div>
+                    </div>
+                    <a href="view_pdf.php?lesson_id=<?php echo $active_lesson['id']; ?>&type=lesson" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 12px;">
+                        ↗ Pantalla Completa
+                    </a>
+                </div>
+                <iframe src="view_pdf.php?lesson_id=<?php echo $active_lesson['id']; ?>&type=lesson#toolbar=0&navpanes=0" style="width: 100%; height: 650px; border: none; display: block;" allowfullscreen></iframe>
+            </div>
+        <?php endif; ?>
         
         <!-- Acciones Rápidas debajo del Video/Audio -->
         <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 25px;">
@@ -408,6 +465,12 @@ require_once '../includes/header.php';
                 $is_active = ($l['id'] === $active_lesson_id);
                 $has_vid = !empty($l['video_url']);
                 $has_aud = !empty($l['audio_file']);
+                $has_pdf = !empty($l['pdf_file']);
+                
+                $type_icons = '';
+                if ($has_vid) $type_icons .= '🎥';
+                if ($has_aud) $type_icons .= '🎵';
+                if ($has_pdf) $type_icons .= '📕';
                 ?>
                 <div class="lesson-item <?php echo $is_active ? 'active' : ''; ?>" onclick="navigateToLesson(<?php echo $l['id']; ?>)">
                     <label class="custom-checkbox" onclick="event.stopPropagation()">
@@ -417,13 +480,7 @@ require_once '../includes/header.php';
                     <span class="lesson-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <span><?php echo h($l['title']); ?></span>
                         <span style="font-size: 11px; opacity: 0.8; margin-left: 4px;">
-                            <?php if ($has_vid && $has_aud): ?>
-                                🎥🎵
-                            <?php elseif ($has_aud): ?>
-                                🎵
-                            <?php elseif ($has_vid): ?>
-                                🎥
-                            <?php endif; ?>
+                            <?php echo $type_icons; ?>
                         </span>
                     </span>
                 </div>
@@ -452,6 +509,12 @@ require_once '../includes/header.php';
                     $is_active = ($l['id'] === $active_lesson_id);
                     $has_vid = !empty($l['video_url']);
                     $has_aud = !empty($l['audio_file']);
+                    $has_pdf = !empty($l['pdf_file']);
+
+                    $type_icons = '';
+                    if ($has_vid) $type_icons .= '🎥';
+                    if ($has_aud) $type_icons .= '🎵';
+                    if ($has_pdf) $type_icons .= '📕';
                     ?>
                     <div class="lesson-item bonus-lesson-item <?php echo $is_active ? 'active' : ''; ?>" onclick="navigateToLesson(<?php echo $l['id']; ?>)">
                         <label class="custom-checkbox" onclick="event.stopPropagation()">
@@ -463,13 +526,7 @@ require_once '../includes/header.php';
                                 <?php echo h($l['title']); ?>
                             </span>
                             <span style="font-size: 11px; margin-left: 4px; display: flex; align-items: center; gap: 3px;">
-                                <?php if ($has_vid && $has_aud): ?>
-                                    🎥🎵
-                                <?php elseif ($has_aud): ?>
-                                    🎵
-                                <?php elseif ($has_vid): ?>
-                                    🎥
-                                <?php endif; ?>
+                                <?php echo $type_icons; ?>
                             </span>
                         </span>
                     </div>
