@@ -20,3 +20,7 @@ plataforma/email_notifications_log.txt
 
 # Environment configuration files
 .env
+
+# Uploaded user assets
+plataforma/uploads/*
+!plataforma/uploads/.htaccess

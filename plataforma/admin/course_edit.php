@@ -109,6 +109,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!move_uploaded_file($file_tmp, $upload_path)) {
                         $error = 'No se pudo mover el archivo de audio a la carpeta de descargas del servidor.';
                         $audio_file_name = null;
+                    } else {
+                        @chmod($upload_path, 0644);
                     }
                 } else {
                     $error = 'Formato de audio no permitido. Solo se aceptan MP3, WAV, M4A, OGG, AAC y FLAC.';
@@ -128,6 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!move_uploaded_file($file_tmp, $upload_path)) {
                         $error = 'No se pudo mover el archivo PDF de la clase al servidor.';
                         $pdf_file_name = null;
+                    } else {
+                        @chmod($upload_path, 0644);
                     }
                 } else {
                     $error = 'Formato de lectura no permitido. Solo se aceptan documentos PDF (.pdf).';

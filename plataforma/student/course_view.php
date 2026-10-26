@@ -186,13 +186,15 @@ function render_video_player($url, $has_audio = false) {
 }
 
 // Función auxiliar para renderizar el reproductor de Audio PROTEGIDO (Sin descarga)
-function render_audio_player($audio_filename) {
+function render_audio_player($audio_filename, $lesson_id = 0) {
     if (empty($audio_filename)) {
         return '';
     }
     
-    $audio_url = '../uploads/' . rawurlencode($audio_filename);
-    $ext = strtoupper(pathinfo($audio_filename, PATHINFO_EXTENSION));
+    $stream_url = ($lesson_id > 0) ? 'view_audio.php?lesson_id=' . intval($lesson_id) : '../uploads/' . rawurlencode($audio_filename);
+    $direct_fallback = '../uploads/' . rawurlencode($audio_filename);
+    $ext = strtolower(pathinfo($audio_filename, PATHINFO_EXTENSION));
+    $mime = ($ext === 'mp3') ? 'audio/mpeg' : (($ext === 'm4a') ? 'audio/mp4' : 'audio/' . $ext);
     
     return '
     <div class="audio-player-card" oncontextmenu="return false;" style="background: rgba(18, 18, 24, 0.85); border: 1px solid var(--border-glow); backdrop-filter: blur(12px); border-radius: 12px; padding: 20px; margin-bottom: 25px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);">
@@ -203,7 +205,7 @@ function render_audio_player($audio_filename) {
                 </div>
                 <div>
                     <h4 style="font-size: 15px; font-weight: 600; margin: 0; color: var(--heading-color);">Audio Protegido de la Clase</h4>
-                    <span style="font-size: 12px; color: var(--text-muted);">🔒 Transmisión exclusiva para alumnos • Reproducción protegida</span>
+                    <span style="font-size: 12px; color: var(--text-muted);">🔒 Transmisión streaming exclusiva • Reproducción protegida</span>
                 </div>
             </div>
             
@@ -225,8 +227,9 @@ function render_audio_player($audio_filename) {
             </div>
         </div>
         
-        <audio id="lms-audio-player" controls controlsList="nodownload" oncontextmenu="return false;" style="width: 100%; height: 42px; border-radius: 8px; outline: none; background: rgba(255, 255, 255, 0.05);">
-            <source src="' . $audio_url . '" type="audio/' . strtolower($ext) . '">
+        <audio id="lms-audio-player" controls preload="metadata" controlsList="nodownload" oncontextmenu="return false;" style="width: 100%; height: 42px; border-radius: 8px; outline: none; background: rgba(255, 255, 255, 0.05);">
+            <source src="' . $stream_url . '" type="' . $mime . '">
+            <source src="' . $direct_fallback . '" type="' . $mime . '">
             Tu navegador no soporta el elemento de audio HTML5.
         </audio>
     </div>
@@ -304,7 +307,7 @@ require_once '../includes/header.php';
         
         <!-- Reproductor de Audio si la clase tiene audio subido al servidor -->
         <?php if ($has_active_aud): ?>
-            <?php echo render_audio_player($active_lesson['audio_file']); ?>
+            <?php echo render_audio_player($active_lesson['audio_file'], $active_lesson['id'] ?? 0); ?>
         <?php endif; ?>
 
         <!-- Si la clase tiene video o audio Y ADEMÁS tiene PDF de lectura adjunto -->
@@ -602,10 +605,11 @@ function closePdfViewer() {
 
 function openAudioModal(resourceId, title) {
     document.getElementById('audio-modal-title').innerText = title;
-    const audioUrl = 'view_pdf.php?id=' + resourceId;
+    const audioUrl = 'view_audio.php?resource_id=' + resourceId;
     const player = document.getElementById('resource-audio-player');
     const source = document.getElementById('resource-audio-source');
     source.src = audioUrl;
+    source.type = 'audio/mpeg';
     player.load();
     player.play().catch(() => {});
     document.getElementById('audio-viewer-modal').style.display = 'flex';
@@ -615,7 +619,11 @@ function closeAudioModal() {
     const player = document.getElementById('resource-audio-player');
     player.pause();
     document.getElementById('audio-viewer-modal').style.display = 'none';
-    document.getElementById('resource-audio-source').src = '';
+    const source = document.getElementById('resource-audio-source');
+    if (source) {
+        source.src = '';
+    }
+    player.load();
 }
 
 // Bloqueo de atajos de teclado para guardar/imprimir en la ventana protegida (Ctrl+S, Ctrl+P, etc.)
