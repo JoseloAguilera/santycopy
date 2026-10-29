@@ -18,6 +18,14 @@ try {
         exit;
     }
 
+    // Verificar si el curso está publicado o si el visitante es admin
+    $logged_user = get_logged_user();
+    $is_admin = ($logged_user && ($logged_user['role'] ?? '') === 'admin');
+    if (($course['status'] ?? 'publicado') !== 'publicado' && !$is_admin) {
+        header('Location: index.php');
+        exit;
+    }
+
     // 2. Calcular estado promocional de 15 minutos para este visitante
     $promo_status = get_course_promo_status($pdo, $course_id);
 

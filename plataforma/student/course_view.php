@@ -21,7 +21,7 @@ try {
     $stmt->execute([$user['id'], $course_id]);
     $enrollment = $stmt->fetch();
     
-    if (!$enrollment) {
+    if (!$enrollment && ($user['role'] ?? '') !== 'admin') {
         die("No tienes acceso a este curso. Si acabas de realizar el pago, espera unos momentos o contacta a soporte.");
     }
     
@@ -65,8 +65,8 @@ try {
     $stmt->execute([$course_id, $user['id']]);
     $completed_lessons_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
     
-    // 6. Cargar los recursos (PDFs) del curso
-    $stmt = $pdo->prepare("SELECT * FROM resources WHERE course_id = ? ORDER BY created_at DESC");
+    // 6. Cargar los recursos (PDFs y Audios) del curso en orden
+    $stmt = $pdo->prepare("SELECT * FROM resources WHERE course_id = ? ORDER BY order_number ASC, id ASC");
     $stmt->execute([$course_id]);
     $resources = $stmt->fetchAll();
     

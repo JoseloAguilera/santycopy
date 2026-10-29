@@ -138,7 +138,7 @@ require_once '../includes/header.php';
             <div class="alert alert-success"><?php echo h($success); ?></div>
         <?php endif; ?>
         
-        <div style="display: grid; grid-template-columns: 1fr 340px; gap: 30px;">
+        <div class="admin-two-cols-sidebar">
             <!-- Listado General de Alumnos -->
             <div>
                 <h2 style="font-size: 18px; margin-bottom: 15px;">👥 Alumnos Registrados</h2>

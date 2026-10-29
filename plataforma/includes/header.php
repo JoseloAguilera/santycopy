@@ -42,4 +42,4 @@ $user = get_logged_user();
             </div>
         </div>
     </nav>
-    <div class="container" style="flex-grow: 1; padding-top: 30px; padding-bottom: 30px;">
+    <div class="container <?php echo (isset($active_tab) && $active_tab === 'admin') ? 'container-admin' : ''; ?>" style="flex-grow: 1; padding-top: 30px; padding-bottom: 30px;">

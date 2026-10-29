@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
     `promo_duration_minutes` INT DEFAULT 15,
     `payment_type` VARCHAR(20) DEFAULT 'one_time', -- 'one_time', 'subscription'
     `subscription_period` INT DEFAULT 30, -- en días
+    `status` VARCHAR(20) DEFAULT 'publicado', -- 'publicado', 'despublicado', 'archivado'
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -45,6 +46,7 @@ CREATE TABLE IF NOT EXISTS `resources` (
     `course_id` INT NOT NULL,
     `title` VARCHAR(150) NOT NULL,
     `file_path` VARCHAR(255) NOT NULL,
+    `order_number` INT NOT NULL DEFAULT 0,
     `is_bonus` TINYINT(1) DEFAULT 0,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`course_id`) REFERENCES `courses`(`id`) ON DELETE CASCADE

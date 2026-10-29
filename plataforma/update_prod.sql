@@ -14,6 +14,17 @@ UPDATE `users`
 SET `role` = 'student' 
 WHERE `email` = 'alumno@santycopy.com';
 
+-- 3. AGREGAR CAMPO DE ORDEN PARA RECURSOS DE APOYO
+-- Permite ordenar los recursos (PDFs y Audios) en el panel de administración
+ALTER TABLE `resources` 
+ADD COLUMN `order_number` INT NOT NULL DEFAULT 0 AFTER `file_path`;
+UPDATE `resources` SET `order_number` = id WHERE `order_number` = 0;
+
+-- 4. AGREGAR ESTADO DEL CURSO (publicado, despublicado, archivado)
+-- Permite preparar cursos en borrador ('despublicado') antes de hacerlos visibles en el catálogo público
+ALTER TABLE `courses` 
+ADD COLUMN `status` VARCHAR(20) NOT NULL DEFAULT 'publicado' AFTER `subscription_period`;
+
 -- =====================================================================
 -- NOTA / VERIFICACIÓN ADICIONAL:
 -- Si tu base de datos en producción no tenía los cambios de la entrega

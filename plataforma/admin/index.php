@@ -22,6 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $price = intval($_POST['price'] ?? 0);
     $payment_type = trim($_POST['payment_type'] ?? 'one_time');
     $subscription_period = intval($_POST['subscription_period'] ?? 30);
+    $status = in_array($_POST['status'] ?? '', ['publicado', 'despublicado', 'archivado']) ? $_POST['status'] : 'despublicado';
     
     // Procesar carga de imagen miniatura (thumbnail)
     $thumbnail_name = null;
@@ -53,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if (empty($error)) {
         try {
             $stmt = $pdo->prepare("
-                INSERT INTO courses (title, description, thumbnail, price, payment_type, subscription_period) 
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO courses (title, description, thumbnail, price, payment_type, subscription_period, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $title, 
@@ -62,11 +63,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $thumbnail_name, 
                 $price, 
                 $payment_type, 
-                ($payment_type === 'subscription' ? $subscription_period : null)
+                ($payment_type === 'subscription' ? $subscription_period : null),
+                $status
             ]);
-            $success = 'Curso creado correctamente.';
+            $success = 'Curso creado correctamente con estado "' . ucfirst($status) . '".';
         } catch (PDOException $e) {
             $error = 'Error al crear el curso: ' . $e->getMessage();
+        }
+    }
+}
+
+// Procesar Cambio Rápido de Estado de Curso
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'change_course_status') {
+    validate_csrf($_POST['csrf_token'] ?? '');
+    
+    $course_id = intval($_POST['course_id'] ?? 0);
+    $new_status = $_POST['new_status'] ?? '';
+    if ($course_id > 0 && in_array($new_status, ['publicado', 'despublicado', 'archivado'])) {
+        try {
+            $stmt = $pdo->prepare("UPDATE courses SET status = ? WHERE id = ?");
+            $stmt->execute([$new_status, $course_id]);
+            $success = 'Estado del curso actualizado a "' . ucfirst($new_status) . '".';
+        } catch (PDOException $e) {
+            $error = 'Error al cambiar estado del curso: ' . $e->getMessage();
         }
     }
 }
@@ -158,7 +177,7 @@ require_once '../includes/header.php';
         </div>
         
         <!-- Listado de Cursos y Formulario de Creación -->
-        <div style="display: grid; grid-template-columns: 1fr 340px; gap: 30px; margin-top: 30px;">
+        <div class="admin-two-cols-sidebar" style="margin-top: 30px;">
             <div>
                 <h2 style="font-size: 18px; margin-bottom: 15px;">📚 Cursos en la Plataforma</h2>
                 
@@ -167,22 +186,45 @@ require_once '../includes/header.php';
                         <thead>
                             <tr>
                                 <th>Curso</th>
+                                <th style="width: 140px; text-align: center;">Estado</th>
                                 <th>Tipo</th>
                                 <th>Precio</th>
-                                <th>Videos</th>
-                                <th>Alumnos</th>
-                                <th>Acciones</th>
+                                <th style="text-align: center;">Videos</th>
+                                <th style="text-align: center;">Alumnos</th>
+                                <th style="text-align: center;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($courses)): ?>
                                 <tr>
-                                    <td colspan="6" style="text-align: center; color: var(--text-muted);">No hay cursos creados todavía.</td>
+                                    <td colspan="7" style="text-align: center; color: var(--text-muted);">No hay cursos creados todavía.</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($courses as $c): ?>
+                                    <?php 
+                                    $c_stat = $c['status'] ?? 'publicado'; 
+                                    $bg_color = ($c_stat === 'publicado') ? 'rgba(16,185,129,0.12)' : (($c_stat === 'despublicado') ? 'rgba(245,158,11,0.12)' : 'rgba(156,163,175,0.12)');
+                                    $text_color = ($c_stat === 'publicado') ? '#10b981' : (($c_stat === 'despublicado') ? '#f59e0b' : '#9ca3af');
+                                    $border_color = ($c_stat === 'publicado') ? 'rgba(16,185,129,0.35)' : (($c_stat === 'despublicado') ? 'rgba(245,158,11,0.35)' : 'rgba(156,163,175,0.35)');
+                                    ?>
                                     <tr>
-                                        <td style="font-weight: 600; color: var(--heading-color);"><?php echo h($c['title']); ?></td>
+                                        <td style="font-weight: 600; color: var(--heading-color);">
+                                            <a href="course_edit.php?id=<?php echo $c['id']; ?>" style="color: inherit; text-decoration: none;">
+                                                <?php echo h($c['title']); ?>
+                                            </a>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <form action="index.php" method="POST" style="margin: 0;">
+                                                <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
+                                                <input type="hidden" name="action" value="change_course_status">
+                                                <input type="hidden" name="course_id" value="<?php echo $c['id']; ?>">
+                                                <select name="new_status" onchange="this.form.submit()" style="background: <?php echo $bg_color; ?>; color: <?php echo $text_color; ?>; border: 1px solid <?php echo $border_color; ?>; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 4px 8px; cursor: pointer; outline: none;" title="Cambiar estado de publicación">
+                                                    <option value="publicado" <?php echo ($c_stat === 'publicado') ? 'selected' : ''; ?>>🟢 Publicado</option>
+                                                    <option value="despublicado" <?php echo ($c_stat === 'despublicado') ? 'selected' : ''; ?>>🟡 Despublicado</option>
+                                                    <option value="archivado" <?php echo ($c_stat === 'archivado') ? 'selected' : ''; ?>>⚪ Archivado</option>
+                                                </select>
+                                            </form>
+                                        </td>
                                         <td>
                                             <span style="font-size: 12px; font-weight: 500;">
                                                 <?php echo ($c['payment_type'] === 'subscription') ? 'Suscripción' : 'Compra única'; ?>
@@ -191,14 +233,14 @@ require_once '../includes/header.php';
                                         <td><?php echo number_format($c['price'], 0, ',', '.'); ?> ₲</td>
                                         <td style="text-align: center;"><?php echo $c['total_lessons']; ?></td>
                                         <td style="text-align: center; font-weight: 600; color: var(--primary-color);"><?php echo $c['total_enrolled']; ?></td>
-                                        <td>
-                                            <div style="display: flex; gap: 6px;">
-                                                <a href="course_edit.php?id=<?php echo $c['id']; ?>" class="btn btn-secondary btn-sm">Editar</a>
+                                        <td style="text-align: center;">
+                                            <div style="display: flex; gap: 6px; justify-content: center;">
+                                                <a href="course_edit.php?id=<?php echo $c['id']; ?>" class="btn btn-secondary btn-sm" style="padding: 4px 8px; font-size: 11px;">Editar</a>
                                                 <form action="index.php" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este curso? Se borrarán todos los accesos, videos y recursos asociados de forma permanente.');">
                                                     <input type="hidden" name="csrf_token" value="<?php echo csrf_token(); ?>">
                                                     <input type="hidden" name="action" value="delete_course">
                                                     <input type="hidden" name="course_id" value="<?php echo $c['id']; ?>">
-                                                    <button type="submit" class="btn btn-danger btn-sm">Borrar</button>
+                                                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 4px 8px; font-size: 11px;">Borrar</button>
                                                 </form>
                                             </div>
                                         </td>
@@ -225,6 +267,18 @@ require_once '../includes/header.php';
                         <div class="form-group">
                             <label class="form-label" for="description">Descripción</label>
                             <textarea class="form-control" id="description" name="description" rows="3" placeholder="Resumen del contenido..."></textarea>
+                        </div>
+
+                        <div class="form-group" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px;">
+                            <label class="form-label" for="new_status" style="font-weight: 600; color: var(--heading-color);">Estado Inicial</label>
+                            <select class="form-control" id="new_status" name="status">
+                                <option value="despublicado" selected>🟡 Despublicado / Borrador (Recomendado para ir cargando clases)</option>
+                                <option value="publicado">🟢 Publicado (Visible en catálogo inmediatamente)</option>
+                                <option value="archivado">⚪ Archivado</option>
+                            </select>
+                            <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 3px;">
+                                Si el curso aún no está terminado, créalo como <strong>Despublicado</strong>.
+                            </span>
                         </div>
                         
                         <div class="form-group">

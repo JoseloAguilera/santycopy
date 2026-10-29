@@ -98,6 +98,19 @@ try {
             $pdo->exec("ALTER TABLE `resources` ADD COLUMN `is_bonus` TINYINT(1) DEFAULT 0 AFTER `file_path`");
         }
 
+        // Columna order_number en resources
+        $checkResourceOrder = $pdo->query("SHOW COLUMNS FROM `resources` LIKE 'order_number'");
+        if ($checkResourceOrder && $checkResourceOrder->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE `resources` ADD COLUMN `order_number` INT NOT NULL DEFAULT 0 AFTER `file_path`");
+            $pdo->exec("UPDATE `resources` SET `order_number` = id WHERE `order_number` = 0");
+        }
+
+        // Columna status en courses
+        $checkCourseStatus = $pdo->query("SHOW COLUMNS FROM `courses` LIKE 'status'");
+        if ($checkCourseStatus && $checkCourseStatus->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE `courses` ADD COLUMN `status` VARCHAR(20) NOT NULL DEFAULT 'publicado' AFTER `subscription_period`");
+        }
+
         // Tabla promo_sessions para control de tiempo de ofertas por usuario/visitante
         $pdo->exec("CREATE TABLE IF NOT EXISTS `promo_sessions` (
             `id` INT AUTO_INCREMENT PRIMARY KEY,

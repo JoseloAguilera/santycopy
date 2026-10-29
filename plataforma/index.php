@@ -11,8 +11,12 @@ $user = get_logged_user();
 $courses = [];
 
 try {
-    // Obtener todos los cursos
-    $stmt = $pdo->query("SELECT * FROM courses ORDER BY created_at DESC");
+    // Obtener cursos: solo publicados para el público, o todos si es administrador
+    if ($user && $user['role'] === 'admin') {
+        $stmt = $pdo->query("SELECT * FROM courses ORDER BY created_at DESC");
+    } else {
+        $stmt = $pdo->query("SELECT * FROM courses WHERE status = 'publicado' ORDER BY created_at DESC");
+    }
     $courses = $stmt->fetchAll();
     
     // Obtener los IDs de cursos en los que el usuario logueado ya está inscrito y no han caducado
@@ -59,6 +63,12 @@ require_once 'includes/promo_helper.php';
                         <img src="uploads/<?php echo h($course['thumbnail']); ?>" alt="<?php echo h($course['title']); ?>">
                     <?php else: ?>
                         <div class="placeholder-icon">✍️</div>
+                    <?php endif; ?>
+                    
+                    <?php if (!empty($course['status']) && $course['status'] !== 'publicado' && $user && $user['role'] === 'admin'): ?>
+                        <span class="course-price-badge" style="background: <?php echo ($course['status'] === 'despublicado' ? '#f59e0b' : '#6b7280'); ?>; color: #111; font-weight: 700; left: 12px; right: auto;">
+                            <?php echo ($course['status'] === 'despublicado') ? '🟡 Borrador (Oculto)' : '⚪ Archivado'; ?>
+                        </span>
                     <?php endif; ?>
                     
                     <?php if ($promo['is_active']): ?>

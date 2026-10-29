@@ -30,6 +30,11 @@ try {
         die("El curso seleccionado no existe.");
     }
     
+    // Validar disponibilidad del curso para compra
+    if (($course['status'] ?? 'publicado') !== 'publicado' && ($user['role'] ?? '') !== 'admin') {
+        die("Este curso no se encuentra disponible públicamente en este momento.");
+    }
+    
     // 2. Verificar si ya está inscrito de forma activa
     $stmt = $pdo->prepare("SELECT id FROM enrollments WHERE user_id = ? AND course_id = ? AND (expires_at IS NULL OR expires_at > NOW())");
     $stmt->execute([$user['id'], $course_id]);
