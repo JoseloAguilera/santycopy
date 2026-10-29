@@ -551,7 +551,10 @@ require_once '../includes/header.php';
                     <span style="font-size: 11px; color: #10b981;">🔒 Modo Lectura Exclusiva en Plataforma (Descarga Desactivada)</span>
                 </div>
             </div>
-            <button type="button" onclick="closePdfViewer()" class="btn btn-secondary btn-sm" style="padding: 6px 14px; font-size: 12px; cursor: pointer;">✕ Cerrar</button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <a id="pdf-modal-fullscreen-btn" href="#" target="_blank" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 12px; text-decoration: none;" title="Abrir visor en pestaña completa">↗ Pantalla Completa</a>
+                <button type="button" onclick="closePdfViewer()" class="btn btn-secondary btn-sm" style="padding: 6px 14px; font-size: 12px; cursor: pointer;">✕ Cerrar</button>
+            </div>
         </div>
         <div class="pdf-modal-body" oncontextmenu="return false;">
             <iframe id="pdf-modal-frame" src="" style="width: 100%; height: 100%; border: none;"></iframe>
@@ -593,8 +596,12 @@ function navigateToLesson(lessonId) {
 
 function openPdfViewer(resourceId, title) {
     document.getElementById('pdf-modal-title').innerText = title;
-    const url = 'view_pdf.php?id=' + resourceId + '#toolbar=0&navpanes=0&scrollbar=0';
+    const url = 'view_pdf.php?id=' + resourceId + '#toolbar=0&navpanes=0';
     document.getElementById('pdf-modal-frame').src = url;
+    const fullBtn = document.getElementById('pdf-modal-fullscreen-btn');
+    if (fullBtn) {
+        fullBtn.href = 'view_pdf.php?id=' + resourceId;
+    }
     document.getElementById('pdf-viewer-modal').style.display = 'flex';
 }
 
